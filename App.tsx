@@ -53,8 +53,21 @@ const App: React.FC = () => {
   const [tabGroups, setTabGroups] = useLocalStorage<TabGroup[]>('browser-tab-groups-v4', []);
   const [activeTabId, setActiveTabId] = useLocalStorage<string | null>('browser-active-tab-v4', null);
   const [bookmarks, setBookmarks] = useLocalStorage<Bookmark[]>('browser-bookmarks-v4', [
-    { id: 'b1', title: 'Google', url: 'https://google.com' },
-    { id: 'b2', title: 'GitHub', url: 'https://github.com' },
+    { id: 'b1', title: 'Chat', url: 'https://chat.cyopsys.com/' },
+    { id: 'b2', title: 'Build', url: 'https://build.cyopsys.com/' },
+    { id: 'b3', title: 'WebOS', url: 'https://webos.cyopsys.com/' },
+    { id: 'b4', title: 'Bolt', url: 'https://bolt-main.cyopsys.com/' },
+    { id: 'b5', title: 'LiteChat', url: 'https://litechat.cyopsys.com/' },
+    { id: 'b6', title: 'Lister', url: 'https://lister.cyopsys.com/' },
+    { id: 'b7', title: 'MCP Configure', url: 'https://www.mcpconfigure.com' },
+    { id: 'b8', title: 'Scratch Optimizer', url: 'https://scratch-optimizer.cyopsys.com/' },
+    { id: 'b9', title: 'Design', url: 'https://design.cyopsys.com/' },
+    { id: 'b10', title: 'SVG', url: 'https://svg.cyopsys.com/' },
+    { id: 'b11', title: 'Sculpt', url: 'https://sculpt.cyopsys.com/' },
+    { id: 'b12', title: 'IDE', url: 'https://ide.cyopsys.com/' },
+    { id: 'b13', title: 'Voice', url: 'https://voice.cyopsys.com/' },
+    { id: 'b14', title: 'LMS', url: 'https://lms.cyopsys.com/' },
+    { id: 'b15', title: 'Map', url: 'https://map.cyopsys.com/' },
   ]);
   const [closedTabs, setClosedTabs] = useState<Tab[]>([]);
   const [showBookmarkBar, setShowBookmarkBar] = useLocalStorage('browser-show-bookmark-bar-v4', true);

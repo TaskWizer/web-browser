@@ -117,3 +117,48 @@ Implement deployment configuration for Cloudflare Pages:
 - Prioritize bug fixes (items 1-2) over enhancements (items 3-6)
 - Complete one task fully with validation before moving to the next
 - Do NOT claim features are fixed without actually testing them in the running application
+
+
+
+Issues:
+- Pages are not rendering correctly and things are messed up.
+- If I go to https://www.google.com and try to do a search I get an error:
+
+  "Firefox Can’t Open This Page
+  To protect your security, web-browser.pages.dev will not allow Firefox to display the page if another site has embedded it. To see this page, you need to open it in a new window.
+  Learn more…"
+
+- Browsing seems laggy, please audit and improve.
+- CSS Styling does not seem to be working.
+- Move the new/plus button (+) to the left side next to the tab.
+
+I added the environment variables from the .env.local file to the Cloudflare environment variables and secrets...
+but when I try to use it in the deployed version, I get an error page "Gemini API key not found. Using fallback search."
+
+Please audit the code and fix these issues.
+
+Test and validate everything.
+
+Consider detecting if the page render works and if not, fallback to a simple iframe approach (but as I would like to extend the functionality of this tool in the future, I would like to have full control over it).
+
+I don't care about security issues, I would like the app working reliably.
+
+
+Next:
+Rename "Gemini Browser" to "TaskWizer Browser"
+Add ability to edit the bookmakrs with right click (set name, icon, etc.)
+Allow for dragging/moving the icons around.
+Add nice icons to each bookmark (placeholder for now, if available, grab the favicon/logo/etc.)
+Add Google as the first bookmark to the bookmarks toolbar.
+Add text streaming to the response instead of just a spinner or dump of the data.
+I decided against Google as the address bar behavior, make it chat with the AI and make suggestions instead.
+
+## Execution Principles
+- **Work autonomously**: Make informed decisions without asking questions
+- **Deep research first**: Use `codebase-retrieval` and `git-commit-retrieval` before every change
+- **Validate everything**: Never claim completion without running tests and manual verification
+- **Document evidence**: Provide concrete proof (test results, screenshots, metrics) for every completion
+- **No shortcuts**: Follow the full validation cycle for every task
+- **Quality over speed**: Ensure correctness and completeness before moving to next task
+- **Incremental progress**: Complete one task fully before starting the next
+- **No regressions**: Existing functionality must continue to work
