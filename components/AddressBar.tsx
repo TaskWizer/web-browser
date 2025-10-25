@@ -6,7 +6,7 @@ import type { Tab } from '../types';
 interface AddressBarProps {
   activeTab: Tab | undefined;
   isBookmarked: boolean;
-  onNavigate: (url: string) => void;
+  onNavigate: (url: string, options?: { newTab?: boolean }) => void;
   onSearch: (query: string) => void;
   onBack: () => void;
   onForward: () => void;
@@ -151,16 +151,69 @@ export const AddressBar: React.FC<AddressBarProps> = ({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-        // Form submission is handled by onSubmit
+        // Handle special Enter key combinations for quick navigation
+        const trimmedInput = inputValue.trim();
+        if (!trimmedInput) return;
+
+        // ALT+Enter: Open in new tab (doesn't modify the URL)
+        if (e.altKey) {
+            e.preventDefault();
+            const isUrl = trimmedInput.includes('.') || trimmedInput.startsWith('localhost') || trimmedInput.startsWith('http');
+            if (isUrl) {
+                const properUrl = trimmedInput.startsWith('http') ? trimmedInput : `https://${trimmedInput}`;
+                onNavigate(properUrl, { newTab: true });
+            } else {
+                // For search queries, we can't open in new tab directly from here
+                // Just perform regular search
+                onSearch(trimmedInput);
+            }
+            inputRef.current?.blur();
+            return;
+        }
+
+        // CTRL+SHIFT+Enter: Add www. and .net
+        if (e.ctrlKey && e.shiftKey) {
+            e.preventDefault();
+            const url = `https://www.${trimmedInput}.net`;
+            setInputValue(url);
+            onNavigate(url);
+            inputRef.current?.blur();
+            return;
+        }
+
+        // CTRL+Enter: Add www. and .com
+        if (e.ctrlKey) {
+            e.preventDefault();
+            const url = `https://www.${trimmedInput}.com`;
+            setInputValue(url);
+            onNavigate(url);
+            inputRef.current?.blur();
+            return;
+        }
+
+        // SHIFT+Enter: Add www. and .org
+        if (e.shiftKey) {
+            e.preventDefault();
+            const url = `https://www.${trimmedInput}.org`;
+            setInputValue(url);
+            onNavigate(url);
+            inputRef.current?.blur();
+            return;
+        }
+
+        // Regular Enter: Form submission is handled by onSubmit
         return;
     }
-    if (e.ctrlKey && e.key === 'Enter') {
-        e.preventDefault();
-        const url = `https://www.${inputValue.trim()}.com`;
-        setInputValue(url);
-        onNavigate(url);
-    }
   }
+
+  const handleHomeClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Middle-click (button 1) opens home in new tab
+    if (e.button === 1) {
+      e.preventDefault();
+      onNavigate(NEW_TAB_URL, { newTab: true });
+    }
+    // Left-click (button 0) is handled by onClick
+  };
 
   const canGoBack = activeTab ? activeTab.historyIndex > 0 : false;
   const canGoForward = activeTab ? activeTab.historyIndex < activeTab.history.length - 1 : false;
@@ -201,7 +254,13 @@ export const AddressBar: React.FC<AddressBarProps> = ({
         <button onClick={onBack} disabled={!canGoBack} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white disabled:text-zinc-600 disabled:hover:bg-transparent transition-colors">{ICONS.CHEVRON_LEFT}</button>
         <button onClick={onForward} disabled={!canGoForward} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white disabled:text-zinc-600 disabled:hover:bg-transparent transition-colors">{ICONS.CHEVRON_RIGHT}</button>
         <button onClick={onReload} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors">{ICONS.RELOAD}</button>
-        <button onClick={() => onNavigate(NEW_TAB_URL)} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors">{ICONS.HOME}</button>
+        <button
+          onClick={() => onNavigate(NEW_TAB_URL)}
+          onMouseDown={handleHomeClick}
+          className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+        >
+          {ICONS.HOME}
+        </button>
         <button onClick={onToggleVerticalTabs} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors">{ICONS.VERTICAL_TABS}</button>
 
         <div className="flex-grow flex items-center relative h-full py-1.5">

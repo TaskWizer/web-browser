@@ -40,11 +40,13 @@ View the original app in AI Studio: https://ai.studio/apps/drive/1N8-6zv6H4jCx85
 - **App-like Experience**: Runs in standalone mode when installed
 
 ### 🚀 Enhanced Features
-- **Keyboard Shortcuts**: Efficient navigation with keyboard
-- **Middle-Click Support**: Open links in new tabs with middle mouse button
+- **Smart URL Auto-Completion**: Quick domain shortcuts (CTRL+Enter for .com, SHIFT+Enter for .org, etc.)
+- **Advanced Keyboard Shortcuts**: Efficient navigation with comprehensive keyboard support
+- **Middle-Click Support**: Open links and home button in new tabs with middle mouse button
 - **Duplicate Tabs**: Quickly duplicate any tab
 - **Closed Tab Recovery**: Reopen recently closed tabs
 - **Bookmark Management**: Edit, delete, sort, and organize bookmarks
+- **New Tab Navigation**: ALT+Enter to open URLs in new tabs
 
 ## 🛠️ Installation & Setup
 
@@ -138,10 +140,23 @@ The app can be deployed to any static hosting service:
 - **Right-click on bookmark bar** to add or organize bookmarks
 
 ### Keyboard Shortcuts
-- **Ctrl/Cmd + T**: New tab (via browser)
-- **Ctrl/Cmd + W**: Close tab (via browser)
-- **Ctrl/Cmd + Enter**: Add `.com` to address bar input
-- **Middle Mouse Button**: Open link in new tab
+
+#### URL Auto-Completion
+- **Ctrl/Cmd + Enter**: Add `www.` and `.com` to input (e.g., `google` → `www.google.com`)
+- **Shift + Enter**: Add `www.` and `.org` to input (e.g., `wikipedia` → `www.wikipedia.org`)
+- **Ctrl/Cmd + Shift + Enter**: Add `www.` and `.net` to input (e.g., `example` → `www.example.net`)
+- **Alt + Enter**: Open URL or search in new tab
+
+#### Mouse Shortcuts
+- **Middle-Click on Tab**: Close tab
+- **Middle-Click on Home Button**: Open new tab page in new tab
+- **Middle-Click on Link**: Open link in new tab
+
+#### Browser Shortcuts (Native)
+- **Ctrl/Cmd + T**: New tab
+- **Ctrl/Cmd + W**: Close tab
+
+📖 **Full Documentation**: See [docs/keyboard_shortcuts.md](docs/keyboard_shortcuts.md) for complete keyboard shortcuts guide
 
 ## 🔧 Configuration
 
