@@ -44,6 +44,22 @@ export const SandboxedBrowser: React.FC<SandboxedBrowserProps> = ({ url, title }
       try {
         console.log(`[SandboxedBrowser] Loading ${url}`);
 
+        // Prevent loading the browser's own URL (recursive embedding)
+        const currentOrigin = window.location.origin;
+        try {
+          const urlObj = new URL(url);
+          if (urlObj.origin === currentOrigin) {
+            console.warn(`[SandboxedBrowser] Prevented recursive embedding of ${url}`);
+            setRenderState({
+              mode: 'error',
+              error: 'Cannot load the browser itself in an iframe. This would create a recursive loop.',
+            });
+            return;
+          }
+        } catch (e) {
+          // Invalid URL, let it fail naturally
+        }
+
         // Try to fetch through proxy for advanced rendering
         const proxyResponse: ProxyResponse = await fetchThroughProxy(url);
 
@@ -165,7 +181,11 @@ export const SandboxedBrowser: React.FC<SandboxedBrowserProps> = ({ url, title }
           Advanced Rendering
         </div>
 
-        {/* Sandboxed iframe with proxied content */}
+        {/* Sandboxed iframe with proxied content
+            Note: Using both allow-scripts and allow-same-origin reduces sandboxing security,
+            but is required for full browser functionality. Content is loaded through a proxy
+            to mitigate CORS issues and provide some isolation. Users should be aware that
+            malicious content could potentially escape the sandbox. */}
         <iframe
           ref={iframeRef}
           srcDoc={renderState.html}
@@ -209,7 +229,10 @@ export const SandboxedBrowser: React.FC<SandboxedBrowserProps> = ({ url, title }
           Fallback Mode
         </div>
 
-        {/* Direct iframe */}
+        {/* Direct iframe
+            Note: Using both allow-scripts and allow-same-origin reduces sandboxing security,
+            but is required for full browser functionality. This is the fallback mode when
+            proxy loading fails. */}
         <iframe
           ref={iframeRef}
           src={url}

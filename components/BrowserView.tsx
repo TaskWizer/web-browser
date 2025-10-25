@@ -5,13 +5,26 @@ import { NewTabPage } from './NewTabPage';
 import { GeminiSearchResult } from './GeminiSearchResult';
 import { SettingsPage } from './SettingsPage';
 import { SandboxedBrowser } from './SandboxedBrowser';
+import { DocumentViewer } from './DocumentViewer';
 
 interface PagePreviewProps {
   tab: Tab;
 }
 
+// Helper function to detect if URL is a document (PDF or eBook)
+const isDocumentUrl = (url: string): boolean => {
+  const urlLower = url.toLowerCase();
+  return urlLower.endsWith('.pdf') || urlLower.endsWith('.epub') || urlLower.endsWith('.mobi');
+};
+
 const PagePreview: React.FC<PagePreviewProps> = ({ tab }) => {
   const [useSandboxedBrowser, setUseSandboxedBrowser] = useState(true);
+  const isDocument = isDocumentUrl(tab.url);
+
+  // Check if this is a document URL FIRST, before any other rendering logic
+  if (isDocument) {
+    return <DocumentViewer url={tab.url} title={tab.title} />;
+  }
 
   if (tab.isLoading) {
     return (

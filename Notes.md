@@ -162,10 +162,26 @@ Add suggested prompts below and ability to continue the thread.
 Move new new tab/+ button to the left side next to the tabs.
 Add a fullscreen button
 
+Searching on Google fails with error:
+"browser.cyopsys.com refused to connect."
+
 Add PDF and eBook rendering support.
 Possible resources for reference:
 - https://github.com/Hexlet/jsbrowser
 - https://github.com/BrowserBox/BrowserBox
+- https://github.com/MicrosoftEdge/JSBrowser
+- https://github.com/yokoffing/Betterfox
+- https://github.com/BrowserWorks/waterfox
+- https://github.com/OnionBrowser/OnionBrowser
+- https://github.com/yessGlory17/programmer-browser?tab=readme-ov-file
+
+Integrate uBlock Origin for ad blocking with the ability for the user to customize the options:
+- https://github.com/gorhill/uBlock
+
+
+Impliment versioning with the build to fix caching issues through the web app.
+Need to be able to drag/move the tabs and bookmarks around.
+I wanted an animated glow effect to the CHAT input box, not the address bar.
 
 ## Execution Principles
 - **Work autonomously**: Make informed decisions without asking questions
