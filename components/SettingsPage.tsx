@@ -4,6 +4,9 @@ interface SettingsPageProps {
   onNavigate: (url: string) => void;
 }
 
+// Get version from package.json
+const VERSION = '1.0.0';
+
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
   return (
     <div className="bg-zinc-900 text-white p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
@@ -19,6 +22,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
               <option value="bing" disabled>Bing (coming soon)</option>
             </select>
           </div>
+
+          {/* Version Information */}
+          <div className="bg-zinc-800 p-6 rounded-lg border border-zinc-700">
+            <h2 className="text-xl font-semibold mb-4">About</h2>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-400">Version</span>
+                <span className="font-mono text-indigo-400">v{VERSION}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-400">Application</span>
+                <span className="text-white">TaskWizer Browser</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-400">Build Date</span>
+                <span className="text-zinc-300">{new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+
           {/* More settings can be added here */}
         </div>
       </div>

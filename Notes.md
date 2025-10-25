@@ -180,8 +180,14 @@ Integrate uBlock Origin for ad blocking with the ability for the user to customi
 
 
 Impliment versioning with the build to fix caching issues through the web app.
+Do code splitting to improve load times and reduce initial load time.
 Need to be able to drag/move the tabs and bookmarks around.
 I wanted an animated glow effect to the CHAT input box, not the address bar.
+Improve the structure of the system and use best practices (for performance, security, etc.)
+
+Critical: The UI looked good and you completely broke it, it looks like a web-browser on linux or from the 90s. Please fix it and restore the styling (overall it was pretty nice).
+Critical: The web browsing is still not working, audit and fix.
+Audit and test the application end to end and fix any issues, errors, warnings, etc. and get the web browsing working reliably.
 
 ## Execution Principles
 - **Work autonomously**: Make informed decisions without asking questions

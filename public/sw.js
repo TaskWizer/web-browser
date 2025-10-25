@@ -1,5 +1,6 @@
 // Service Worker for TaskWizer Browser PWA
-const CACHE_NAME = 'taskwizer-browser-v1';
+const VERSION = '1.0.0';
+const CACHE_NAME = `taskwizer-browser-v${VERSION}`;
 const OFFLINE_URL = '/';
 
 // Assets to cache on install
