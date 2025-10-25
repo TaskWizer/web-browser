@@ -33,9 +33,9 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({ onSearch }) => {
     <div className="flex flex-col items-center justify-center h-full bg-zinc-900 text-white p-4">
       <div className="text-center">
         <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
-          TaskWizer Browser
+          TaskWizer Chat
         </h1>
-        <p className="text-zinc-400 mb-8 max-w-md">A new way to explore the web.</p>
+        <p className="text-zinc-400 mb-8 max-w-md mx-auto">Your AI-powered conversation companion</p>
         
         <form onSubmit={handleSearchSubmit} className="w-full max-w-xl mx-auto mb-6">
             <input

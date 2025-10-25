@@ -140,7 +140,7 @@ export const BrowserView: React.FC<BrowserViewProps> = ({ activeTab, onSearch, o
   
   const viewContent = () => {
     if (activeTab.geminiSearchResult) {
-      return <GeminiSearchResult result={activeTab.geminiSearchResult} />;
+      return <GeminiSearchResult result={activeTab.geminiSearchResult} isStreaming={activeTab.geminiSearchResult.isStreaming} onSearch={onSearch} />;
     }
 
     switch (activeTab.url) {

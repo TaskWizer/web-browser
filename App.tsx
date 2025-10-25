@@ -8,7 +8,8 @@ import { ContextMenu } from './components/ContextMenu';
 import { BookmarkEditModal } from './components/BookmarkEditModal';
 import type { Tab, TabGroup, Bookmark, ContextMenuAction } from './types';
 import { NEW_TAB_URL, ABOUT_SETTINGS_URL } from './constants';
-import { searchWithGemini } from './services/geminiService';
+import { streamGeminiResponse, generateSuggestedPrompts } from './services/geminiService';
+import type { ConversationMessage } from './types';
 
 // CRITICAL FIX: Replaced the buggy useLocalStorage implementation with a robust, industry-standard
 // pattern using useState and useEffect. The previous version caused stale state closures, which was
@@ -239,28 +240,111 @@ const App: React.FC = () => {
   const handleSearch = async (query: string) => {
       if (!activeTabId) return;
 
-      const updateTabForSearch = (isLoading: boolean, answer?: string) => {
-          setTabs(prevTabs => prevTabs.map(tab => {
-              if (tab.id === activeTabId) {
-                  const url = `gemini://search?q=${encodeURIComponent(query)}`;
-                  const history = [...tab.history.slice(0, tab.historyIndex + 1), url];
-                  return {
-                      ...tab,
-                      url,
-                      title: `Search: ${query}`,
-                      isLoading,
-                      geminiSearchResult: { query, answer: answer ?? "Thinking..." },
-                      history,
-                      historyIndex: history.length - 1,
-                  }
-              }
-              return tab;
-          }));
-      };
+      const url = `gemini://search?q=${encodeURIComponent(query)}`;
+      const currentTabId = activeTabId;
 
-      updateTabForSearch(true);
-      const answer = await searchWithGemini(query);
-      updateTabForSearch(false, answer);
+      // Get existing conversation history from the current tab
+      const currentTab = tabs.find(t => t.id === currentTabId);
+      const existingHistory = currentTab?.geminiSearchResult?.conversationHistory || [];
+
+      // Initialize the search with empty answer and streaming state
+      setTabs(prevTabs => prevTabs.map(tab => {
+          if (tab.id === currentTabId) {
+              const history = [...tab.history.slice(0, tab.historyIndex + 1), url];
+              return {
+                  ...tab,
+                  url,
+                  title: `Search: ${query}`,
+                  isLoading: true,
+                  geminiSearchResult: {
+                    query,
+                    answer: "",
+                    isStreaming: true,
+                    conversationHistory: existingHistory,
+                  },
+                  history,
+                  historyIndex: history.length - 1,
+              }
+          }
+          return tab;
+      }));
+
+      let accumulatedAnswer = "";
+
+      // Stream the response with conversation history
+      await streamGeminiResponse(
+          query,
+          // onChunk: Accumulate text chunks as they arrive
+          (chunk: string) => {
+              accumulatedAnswer += chunk;
+              setTabs(prevTabs => prevTabs.map(tab => {
+                  if (tab.id === currentTabId && tab.geminiSearchResult) {
+                      return {
+                          ...tab,
+                          geminiSearchResult: {
+                              ...tab.geminiSearchResult,
+                              answer: accumulatedAnswer,
+                              isStreaming: true,
+                          }
+                      };
+                  }
+                  return tab;
+              }));
+          },
+          // onComplete: Mark streaming as complete and add to conversation history
+          () => {
+              setTabs(prevTabs => prevTabs.map(tab => {
+                  if (tab.id === currentTabId && tab.geminiSearchResult) {
+                      // Add user query and assistant response to conversation history
+                      const userMessage: ConversationMessage = {
+                        role: 'user',
+                        content: query,
+                        timestamp: Date.now()
+                      };
+                      const assistantMessage: ConversationMessage = {
+                        role: 'assistant',
+                        content: accumulatedAnswer,
+                        timestamp: Date.now()
+                      };
+
+                      const updatedHistory = [...existingHistory, userMessage, assistantMessage];
+
+                      // Generate suggested prompts based on the query and answer
+                      const suggestedPrompts = generateSuggestedPrompts(query, accumulatedAnswer);
+
+                      return {
+                          ...tab,
+                          isLoading: false,
+                          geminiSearchResult: {
+                              ...tab.geminiSearchResult,
+                              isStreaming: false,
+                              conversationHistory: updatedHistory,
+                              suggestedPrompts,
+                          }
+                      };
+                  }
+                  return tab;
+              }));
+          },
+          // onError: Handle errors
+          (errorMessage: string) => {
+              setTabs(prevTabs => prevTabs.map(tab => {
+                  if (tab.id === currentTabId && tab.geminiSearchResult) {
+                      return {
+                          ...tab,
+                          isLoading: false,
+                          geminiSearchResult: {
+                              ...tab.geminiSearchResult,
+                              answer: errorMessage,
+                              isStreaming: false,
+                          }
+                      };
+                  }
+                  return tab;
+              }));
+          },
+          existingHistory // Pass conversation history to the service
+      );
   };
   
   const handleDuplicateTab = (tabId: string) => {

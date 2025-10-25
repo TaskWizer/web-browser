@@ -1,0 +1,392 @@
+# Task: Enhance TaskWizer Browser with AI Chat Improvements, UI Enhancements, and Navigation Features
+
+Implement the following enhancements to the TaskWizer Browser application. Work through each feature sequentially, completing and validating each one before proceeding to the next.
+
+## Feature 1: Implement Text Streaming for AI Responses
+
+**Goal**: Replace the current all-at-once AI response display with real-time streaming text that appears incrementally as the AI generates it.
+
+**Requirements**:
+- Research the Gemini API's streaming capabilities in `services/geminiService.ts`
+  - Look for `streamGenerateContent` method in the Gemini API documentation
+  - Understand how to handle streaming chunks and partial responses
+- Update `services/geminiService.ts` to support streaming:
+  - Add a new function (e.g., `streamGeminiResponse`) that uses `streamGenerateContent`
+  - Process streaming chunks as they arrive
+  - Return an async generator or use callbacks to emit text chunks
+- Update `components/GeminiSearchResult.tsx` to handle streaming:
+  - Add state to accumulate streaming text chunks
+  - Display text incrementally as chunks arrive
+  - Add a blinking cursor animation (e.g., `|` or `▊`) at the end of streaming text
+  - Remove cursor when streaming completes
+- Handle streaming errors gracefully:
+  - Display user-friendly error messages if streaming fails
+  - Fall back to non-streaming if streaming is unavailable
+  - Show loading state while waiting for first chunk
+- Ensure streaming works for:
+  - Initial queries from the address bar
+  - Follow-up questions in conversation threads
+- Test with:
+  - Short queries (1-2 word responses)
+  - Long queries (multi-paragraph responses)
+  - Queries that generate code blocks
+  - Network interruptions (simulate slow connections)
+- **Validation**: Capture video or multiple screenshots showing text appearing incrementally with cursor animation
+
+## Feature 2: Improve Markdown Rendering in AI Responses
+
+**Goal**: Enhance the visual presentation of Markdown content in AI responses with better formatting, syntax highlighting, and styling.
+
+**Requirements**:
+- Research current Markdown implementation:
+  - Use `codebase-retrieval` to find where Markdown is rendered (likely in `components/GeminiSearchResult.tsx`)
+  - Identify which library is used (e.g., `react-markdown`, `marked`, `markdown-it`)
+  - Check `package.json` for existing Markdown-related dependencies
+- If no Markdown library exists, install one:
+  - Recommended: `react-markdown` with `remark-gfm` for GitHub Flavored Markdown
+  - For syntax highlighting: `react-syntax-highlighter` with a dark theme (e.g., `atomDark`, `dracula`, `vscDarkPlus`)
+- Implement comprehensive Markdown rendering with custom styling:
+  - **Code blocks**: 
+    - Syntax highlighting for common languages (JavaScript, TypeScript, Python, HTML, CSS, JSON, etc.)
+    - Line numbers (optional)
+    - Copy button in top-right corner
+    - Dark background (zinc-900 or similar) with proper contrast
+  - **Inline code**: 
+    - Background color (zinc-700/zinc-800)
+    - Padding and border-radius
+    - Distinct font (monospace)
+  - **Tables**: 
+    - Borders with zinc-600/zinc-700 colors
+    - Alternating row backgrounds for readability
+    - Proper padding and spacing
+    - Header row with bold text and darker background
+  - **Lists**: 
+    - Proper indentation for nested lists
+    - Distinct bullet styles for different nesting levels
+    - Adequate spacing between items
+  - **Headings**: 
+    - Size hierarchy (h1 > h2 > h3, etc.)
+    - Margin spacing above and below
+    - Font weight variations
+  - **Blockquotes**: 
+    - Left border (indigo-500 or zinc-500)
+    - Italic text or distinct background
+    - Padding and margin
+  - **Links**: 
+    - Color (indigo-400 or blue-400)
+    - Underline on hover
+    - Visited state styling
+  - **Horizontal rules**: Styled with zinc-600/zinc-700
+- Ensure all styles work with the dark theme (zinc-800 background)
+- Test with a comprehensive Markdown sample including:
+  - All heading levels (h1-h6)
+  - Code blocks in multiple languages
+  - Inline code
+  - Tables with multiple columns and rows
+  - Nested lists (ordered and unordered)
+  - Blockquotes
+  - Links
+  - Bold, italic, and strikethrough text
+- **Validation**: Capture screenshots showing each Markdown element rendered correctly
+
+## Feature 3: Add Suggested Prompts and Conversation Threading
+
+**Goal**: Display contextually relevant suggested follow-up prompts below AI responses and enable multi-turn conversations with full context preservation.
+
+**Requirements**:
+- **Suggested Prompts Implementation**:
+  - Add a section below each AI response in `components/GeminiSearchResult.tsx`
+  - Display 3-5 suggested follow-up prompts as clickable buttons/chips
+  - Suggested prompts should be:
+    - Contextually relevant (e.g., "Tell me more about...", "Can you explain...", "What are the alternatives?")
+    - Either hardcoded smart suggestions or generated by the AI (if API supports it)
+    - Styled as rounded buttons/chips with hover effects (indigo-600 background, white text)
+    - Arranged horizontally with flex-wrap or in a grid
+  - Clicking a suggested prompt should:
+    - Populate the address bar input with the prompt text
+    - Automatically submit the query
+    - Add it to the conversation thread
+- **Conversation Threading Implementation**:
+  - Update state management in `App.tsx` to maintain conversation history:
+    - Create a conversation history array: `{ role: 'user' | 'assistant', content: string, timestamp: number }[]`
+    - Store in component state (or consider localStorage for persistence)
+  - Update `services/geminiService.ts` to accept conversation history:
+    - Pass previous messages as context to the Gemini API
+    - Use the API's conversation/chat mode if available
+  - Update `components/GeminiSearchResult.tsx` to display full conversation:
+    - Show all messages in chronological order
+    - Visually distinguish user messages from AI responses:
+      - User messages: Right-aligned, different background color (indigo-900/indigo-800)
+      - AI messages: Left-aligned, current background color (zinc-800)
+    - Add timestamps or message indicators
+    - Add avatars or icons (optional: user icon vs AI icon)
+  - Add a "Clear Conversation" or "New Chat" button to reset the thread
+- **Context Preservation**:
+  - Ensure each new query includes the full conversation history
+  - Test that the AI remembers previous context (e.g., "What did I just ask?" should work)
+  - Limit conversation history to last 10-20 messages to avoid token limits
+- **Testing**:
+  - Test multi-turn conversations (3-5 exchanges)
+  - Verify context is preserved ("What's the capital of France?" → "What's its population?" should work)
+  - Test suggested prompts are clickable and submit correctly
+  - Test conversation clearing/reset
+- **Validation**: Capture screenshots showing a multi-turn conversation with suggested prompts
+
+## Feature 4: Rebrand New Tab Page from "TaskWizer Browser" to "TaskWizer Chat"
+
+**Goal**: Update the New Tab page branding to emphasize the AI chat functionality.
+
+**Requirements**:
+- Locate the New Tab page component (likely `components/NewTabPage.tsx`)
+- Change the main heading:
+  - From: "TaskWizer Browser"
+  - To: "TaskWizer Chat"
+- Update the subtitle:
+  - From: "A new way to explore the web."
+  - To: "Your AI-powered conversation companion" (or similar chat-focused text)
+  - Ensure subtitle is centered below the heading
+- Verify layout remains visually balanced:
+  - Heading should remain centered
+  - Subtitle should remain centered
+  - Spacing should be consistent
+- Ensure this change ONLY affects the New Tab page:
+  - Application title in `index.html` should remain "TaskWizer Browser"
+  - Browser tab title should remain "TaskWizer Browser"
+  - Manifest and metadata should remain unchanged
+- **Validation**: Capture screenshot showing "TaskWizer Chat" heading s; a
+
+## Feature 5: Add Animated Placeholder Text with Typewriter Effect
+
+**Goal**: Replace the static "Search with Google..." placeholder in the address bar with dynamic, rotating placeholder text that uses a typewriter animation to invite users to chat with the AI.
+
+**Requirements**:
+- Locate the address bar input component (likely in `App.tsx` or `components/AddressBar.tsx`)
+- Create an array of 8-10 engaging placeholder messages:
+  - "Ask me anything..."
+  - "What would you like to know?"
+  - "Let's have a conversation..."
+  - "I'm here to help..."
+  - "What's on your mind?"
+  - "Start chatting with AI..."
+  - "How can I assist you today?"
+  - "Curious about something?"
+  - "Need help with anything?"
+  - "Let's explore ideas together..."
+- Implement typewriter animation using React state and `useEffect`:
+  - **Typing phase**:
+    - Add one character at a time to the placeholder
+    - Use `setTimeout` with 50-100ms delay per character
+    - Simulate realistic typing speed (slightly variable timing)
+  - **Pause phase**:
+    - When message is fully typed, pause for 2-3 seconds
+  - **Erasing phase**:
+    - Remove one character at a time (backspace effect)
+    - Use `setTimeout` with 30-50ms delay per character (faster than typing)
+  - **Cycle phase**:
+    - Move to next message in array
+    - Loop back to first message after last one
+- Make animation interactive:
+  - **On focus**: Pause/stop the animation, keep current text visible
+  - **On blur (if input is empty)**: Resume animation from current state
+  - **On user typing**: Clear placeholder immediately (standard input behavior)
+  - **On input cleared**: Resume animation after a brief delay (500ms)
+- Ensure animation doesn't interfere with:
+  - User input (typing should work normally)
+  - Autofocus behavior
+  - Form submission
+- Use `useRef` to track animation state and cleanup timers properly
+- **Testing**:
+  - Verify animation cycles through all messages
+  - Test focus/blur behavior
+  - Test typing and clearing input
+  - Verify no memory leaks (cleanup timers on unmount)
+- **Validation**: Capture video or GIF showing typewriter animation cycling through messages
+
+## Feature 6: Add Animated Glow Effect to Input Box
+
+**Goal**: Add an eye-catching animated glow around the search/chat input box to draw attention and create a modern, polished appearance.
+
+**Requirements**:
+- Locate the address bar input styling (likely in `App.tsx` or a dedicated component)
+- Implement animated glow effect using CSS/Tailwind:
+  - **Option 1: Pulsing box-shadow**:
+    - Use `@keyframes` to animate `box-shadow` property
+    - Glow color: indigo-500/blue-500 with transparency
+    - Animation: Pulse between subtle and more visible (2-4 second cycle)
+    - Example: `box-shadow: 0 0 10px rgba(99, 102, 241, 0.5)` → `0 0 20px rgba(99, 102, 241, 0.8)`
+  - **Option 2: Rotating gradient border**:
+    - Use pseudo-element (::before or ::after) with gradient background
+    - Rotate gradient using `@keyframes` and `transform: rotate()`
+    - Blur the pseudo-element for glow effect
+  - **Option 3: Multiple layered shadows**:
+    - Combine multiple `box-shadow` values for depth
+    - Animate opacity or blur radius
+- Glow characteristics:
+  - **Colors**: Indigo-500, blue-500, or purple-500 (match application theme)
+  - **Intensity**: Subtle by default, slightly stronger on focus
+  - **Speed**: 2-4 second animation cycle (smooth, not jarring)
+  - **Behavior on focus**: Intensify glow or change color slightly
+  - **Behavior on blur**: Return to default glow
+- Ensure performance:
+  - Use `will-change: box-shadow` or `transform` for GPU acceleration
+  - Avoid animating expensive properties (width, height, layout properties)
+  - Test on lower-end devices if possible
+- Ensure no layout shifts:
+  - Glow should be outside the input box (not affect dimensions)
+  - Use `box-shadow` or absolutely positioned pseudo-elements
+- Test on different screen sizes:
+  - Desktop (large input)
+  - Tablet (medium input)
+  - Mobile (small input)
+- **Validation**: Capture video or screenshots showing glow animation in default and focused states
+
+## Feature 7: Add Fullscreen Button
+**Goal**: Add a fullscreen button to the browser interface that allows users to toggle fullscreen mode for an immersive browsing experience.
+
+**Requirements**:
+- **Button Placement**:
+  - Add fullscreen button to the navigation toolbar (likely in `App.tsx` near other navigation buttons)
+  - Position: Right side of the toolbar, near the hamburger menu or settings
+  - Icon: Use a fullscreen icon (e.g., expand arrows icon `⛶` or similar SVG)
+- **Functionality**:
+  - Clicking the button should toggle fullscreen mode using the Fullscreen API:
+    - Enter fullscreen: `document.documentElement.requestFullscreen()`
+    - Exit fullscreen: `document.exitFullscreen()`
+  - Button icon should change based on fullscreen state:
+    - Not fullscreen: Show "enter fullscreen" icon (expand arrows)
+    - In fullscreen: Show "exit fullscreen" icon (compress arrows)
+  - Handle fullscreen state changes:
+    - Listen to `fullscreenchange` event to update button state
+    - Update button icon when user exits fullscreen via ESC key
+- **Browser Compatibility**:
+  - Handle vendor prefixes if needed (webkit, moz, ms)
+  - Check if Fullscreen API is supported: `document.fullscreenEnabled`
+  - Hide button or show tooltip if fullscreen is not supported
+- **Styling**:
+  - Match existing toolbar button styles (same size, hover effects, colors)
+  - Add tooltip on hover: "Enter Fullscreen" / "Exit Fullscreen"
+  - Ensure button is visible and accessible in both normal and fullscreen modes
+- **Testing**:
+  - Test entering fullscreen via button click
+  - Test exiting fullscreen via button click
+  - Test exiting fullscreen via ESC key (verify button state updates)
+  - Test on different browsers (Chrome, Firefox, Safari if possible)
+  - Verify toolbar remains accessible in fullscreen mode
+- **Validation**: Capture screenshots showing fullscreen button in both states (enter/exit)
+
+## Feature 8: Improve Hamburger Menu Usability and Add Bookmark Toolbar Toggle
+**Goal**: Fix the hamburger menu to be click-based instead of hover-based (to prevent it from disappearing), and add a "Show/Hide Bookmark Toolbar" option along with other useful menu items.
+**Requirements**:
+- **Fix Hamburger Menu Interaction**:
+  - Locate the hamburger menu component (likely in `App.tsx` or a dedicated component)
+  - Change from hover-based (`onMouseEnter`/`onMouseLeave`) to click-based (`onClick`)
+  - Implement click-to-open behavior:
+    - Clicking hamburger icon toggles menu open/closed
+    - Clicking outside the menu closes it (use `useRef` and click event listener)
+    - Clicking a menu item closes the menu (unless it opens a submenu)
+  - Add visual state indicator:
+    - Hamburger icon should change when menu is open (e.g., transform to X icon, or change color)
+    - Menu should have smooth open/close animation (slide-in or fade-in)
+  - Ensure menu doesn't disappear unexpectedly:
+    - Menu stays open until user explicitly closes it (click outside or click hamburger again)
+    - Mouse leaving menu area should NOT close it
+- **Add "Show/Hide Bookmark Toolbar" Toggle**:
+  - Add a new menu item: "Show Bookmark Toolbar" / "Hide Bookmark Toolbar"
+  - Implement toggle functionality:
+    - Add state in `App.tsx`: `const [showBookmarkBar, setShowBookmarkBar] = useState(true)`
+    - Store preference in localStorage: `localStorage.setItem('show-bookmark-bar', 'true'/'false')`
+    - Conditionally render `<BookmarkBar>` based on state
+  - Menu item should show current state:
+    - If toolbar is visible: "Hide Bookmark Toolbar" with checkmark or eye-slash icon
+    - If toolbar is hidden: "Show Bookmark Toolbar" with eye icon
+  - Clicking menu item should:
+    - Toggle the bookmark toolbar visibility
+    - Update localStorage
+    - Close the menu (or keep it open, depending on UX preference)
+- **Add Other Useful Menu Items**:
+  - "New Tab" - Opens a new tab
+  - "Close Tab" - Closes current tab
+  - "Clear History" - Clears browsing history (if implemented)
+  - "Clear Conversation" - Clears AI chat conversation thread
+  - "Settings" - Opens settings panel (placeholder for future feature)
+  - Dividers (horizontal lines) to group related items
+- **Styling**:
+  - Match application theme (dark background, white text)
+  - Hover effects on menu items (lighter background)
+  - Icons for each menu item (optional but recommended)
+  - Proper spacing and padding
+  - Smooth animations (slide-in from right or top)
+- **Testing**:
+  - Test clicking hamburger icon opens menu
+  - Test clicking outside menu closes it
+  - Test clicking menu items triggers correct actions
+  - Test bookmark toolbar toggle (show/hide)
+  - Test persistence (reload page, verify bookmark toolbar state is preserved)
+  - Test menu doesn't disappear when hovering over it
+  - Test on mobile/tablet (ensure menu is usable on touch devices)
+- **Validation**: Capture screenshots showing:
+  - Hamburger menu open with all menu items visible
+  - Bookmark toolbar visible state
+  - Bookmark toolbar hidden state
+  - Menu staying open when hovering (not disappearing)
+
+## Execution Principles
+- **Work autonomously**: Make informed decisions based on research without asking questions unless absolutely critical
+- **Deep research first**: Before making ANY changes, use these tools extensively:
+  - `codebase-retrieval` to find relevant components, services, and patterns
+  - `git-commit-retrieval` to understand how similar features were implemented
+  - `view` to read current implementations of related features
+  - Understand the full context before writing a single line of code
+- **Validate everything**: Never claim completion without:
+  - Running `npm run build` to verify zero TypeScript errors
+  - Running `npm run dev` and testing in the browser with manual interaction
+  - Capturing screenshots/videos showing the new features working correctly
+  - Testing edge cases (errors, empty states, rapid interactions, different screen sizes)
+  - Verifying no regressions in existing features (bookmarks, navigation, sandboxed browser, etc.)
+- **Document evidence**: Provide concrete proof for every completion:
+  - Screenshots of each feature working (multiple screenshots per feature)
+  - Console logs showing no errors
+  - Build output showing success
+  - Description of manual testing performed
+  - Edge cases tested and results
+- **No shortcuts**: Follow the full validation cycle for every feature:
+  1. Research existing code
+  2. Plan implementation
+  3. Write code
+  4. Build and fix errors
+  5. Test in browser
+  6. Capture evidence
+  7. Mark task complete
+- **Quality over speed**: Ensure correctness, smooth animations, excellent UX, and no bugs before moving to next feature
+- **Incremental progress**: Complete one feature fully (including all testing and validation) before starting the next
+- **No regressions**: After each feature, verify that:
+  - Existing bookmarks functionality works (add, edit, delete, reorder)
+  - Navigation works (back, forward, refresh, new tab)
+  - Sandboxed browser works (loading external content)
+  - Address bar works (URL navigation and search)
+  - No console errors appear
+  - Build completes successfully
+
+## Task Execution Order
+Work through features in this exact order:
+1. ✅ Implement text streaming for AI responses
+2. ✅ Improve Markdown rendering in AI responses
+3. ✅ Add suggested prompts and conversation threading
+4. ✅ Rebrand New Tab page to "TaskWizer Chat"
+5. ✅ Add typewriter animation for placeholder text
+6. ✅ Add animated glow effect to input box
+7. ✅ Add fullscreen button
+8. ✅ Improve hamburger menu usability and add bookmark toolbar toggle
+
+**Do not skip ahead.** Complete each feature fully with evidence (screenshots, testing results, build success) before proceeding to the next.
+
+## Success Criteria
+Each feature is considered complete ONLY when:
+- ✅ Code is written and committed
+- ✅ `npm run build` completes with zero errors
+- ✅ Feature works correctly in the browser (manually tested)
+- ✅ Screenshots/videos captured showing feature working
+- ✅ Edge cases tested (errors, empty states, interactions)
+- ✅ No regressions in existing features
+- ✅ No console errors or warnings
+- ✅ Task marked as COMPLETE in task list

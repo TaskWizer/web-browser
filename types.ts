@@ -19,9 +19,18 @@ export interface TabGroup {
   isCollapsed: boolean;
 }
 
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+}
+
 export interface GeminiSearchResult {
   query: string;
   answer: string;
+  isStreaming?: boolean;
+  conversationHistory?: ConversationMessage[];
+  suggestedPrompts?: string[];
 }
 
 export interface Bookmark {

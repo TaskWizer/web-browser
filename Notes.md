@@ -153,6 +153,20 @@ Add Google as the first bookmark to the bookmarks toolbar.
 Add text streaming to the response instead of just a spinner or dump of the data.
 I decided against Google as the address bar behavior, make it chat with the AI and make suggestions instead.
 
+
+Get text-streaming working
+Improve the Markdown rendering
+Add suggested prompts below and ability to continue the thread.
+
+
+Move new new tab/+ button to the left side next to the tabs.
+Add a fullscreen button
+
+Add PDF and eBook rendering support.
+Possible resources for reference:
+- https://github.com/Hexlet/jsbrowser
+- https://github.com/BrowserBox/BrowserBox
+
 ## Execution Principles
 - **Work autonomously**: Make informed decisions without asking questions
 - **Deep research first**: Use `codebase-retrieval` and `git-commit-retrieval` before every change
