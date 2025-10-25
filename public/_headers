@@ -8,7 +8,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   
   # Content Security Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://aistudiocdn.com https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data: https: http:; font-src 'self' data:; connect-src 'self' https://generativelanguage.googleapis.com https://image.thum.io https://www.google.com; frame-src 'none'; object-src 'none';
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://aistudiocdn.com https://generativelanguage.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; img-src 'self' data: https: http:; font-src 'self' data:; connect-src 'self' https://generativelanguage.googleapis.com https://image.thum.io https://www.google.com https://api.allorigins.win https://corsproxy.io https://api.codetabs.com; frame-src 'self'; object-src 'none';
   
   # Performance headers
   Cache-Control: public, max-age=0, must-revalidate

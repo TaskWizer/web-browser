@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Tab } from '../types';
 import { NEW_TAB_URL, ABOUT_SETTINGS_URL } from '../constants';
 import { NewTabPage } from './NewTabPage';
 import { GeminiSearchResult } from './GeminiSearchResult';
 import { SettingsPage } from './SettingsPage';
+import { SandboxedBrowser } from './SandboxedBrowser';
 
 interface PagePreviewProps {
   tab: Tab;
 }
 
 const PagePreview: React.FC<PagePreviewProps> = ({ tab }) => {
+  const [useSandboxedBrowser, setUseSandboxedBrowser] = useState(true);
+
   if (tab.isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-zinc-900 text-zinc-400">
@@ -19,6 +22,7 @@ const PagePreview: React.FC<PagePreviewProps> = ({ tab }) => {
     );
   }
 
+  // If screenshot is available, show it with overlay
   if (tab.screenshotUrl) {
     return (
       <div className="relative w-full h-full bg-zinc-800 group">
@@ -41,7 +45,28 @@ const PagePreview: React.FC<PagePreviewProps> = ({ tab }) => {
     );
   }
 
-  // Fallback view when screenshot is not available - show a simplified preview
+  // Use SandboxedBrowser for actual rendering with CORS bypass
+  if (useSandboxedBrowser) {
+    return (
+      <div className="relative w-full h-full">
+        <SandboxedBrowser url={tab.url} title={tab.title} />
+
+        {/* Toggle button to switch to legacy view */}
+        <button
+          onClick={() => setUseSandboxedBrowser(false)}
+          className="absolute top-2 left-2 z-10 bg-zinc-800/90 hover:bg-zinc-700/90 text-zinc-300 text-xs px-3 py-1 rounded-full shadow-lg flex items-center gap-2 transition-colors"
+          title="Switch to legacy view"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Legacy View
+        </button>
+      </div>
+    );
+  }
+
+  // Legacy fallback view (original implementation)
   const getHostname = (url: string) => {
     try {
       return new URL(url).hostname;
@@ -65,20 +90,32 @@ const PagePreview: React.FC<PagePreviewProps> = ({ tab }) => {
 
             <div className="space-y-4">
                 <p className="text-zinc-300 leading-relaxed">
-                    This browser simulates web navigation. To view the actual website, click the button below to open it in a new browser tab.
+                    Legacy view mode. To view the actual website with advanced rendering, click the button below.
                 </p>
 
-                <a
-                    href={tab.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full shadow-lg hover:from-indigo-500 hover:to-purple-500 transition-all transform hover:scale-105 font-semibold"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    Open in New Tab
-                </a>
+                <div className="flex gap-3 justify-center">
+                    <button
+                        onClick={() => setUseSandboxedBrowser(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-full shadow-lg hover:from-green-500 hover:to-emerald-500 transition-all transform hover:scale-105 font-semibold"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Try Advanced Rendering
+                    </button>
+
+                    <a
+                        href={tab.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full shadow-lg hover:from-indigo-500 hover:to-purple-500 transition-all transform hover:scale-105 font-semibold"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Open in New Tab
+                    </a>
+                </div>
             </div>
         </div>
     </div>
