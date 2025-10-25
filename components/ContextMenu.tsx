@@ -13,6 +13,11 @@ const ContextMenuItem: React.FC<{ item: ContextMenuAction & { disabled?: boolean
     const [isSubMenuOpen, setIsSubMenuOpen] = useState(false);
     const hasSubMenu = !!item.subActions;
 
+    // Check if this is a separator
+    if (item.label === '---') {
+        return <div className="my-1 border-t border-zinc-700" />;
+    }
+
     const handleClick = () => {
         if (item.disabled) return;
         if (item.action) {
@@ -22,8 +27,8 @@ const ContextMenuItem: React.FC<{ item: ContextMenuAction & { disabled?: boolean
     }
 
     return (
-        <div 
-            className="relative" 
+        <div
+            className="relative"
             onMouseEnter={() => hasSubMenu && !item.disabled && setIsSubMenuOpen(true)}
             onMouseLeave={() => hasSubMenu && setIsSubMenuOpen(false)}
         >
@@ -37,8 +42,8 @@ const ContextMenuItem: React.FC<{ item: ContextMenuAction & { disabled?: boolean
             </button>
             {isSubMenuOpen && hasSubMenu && (
                 <div className="absolute left-full -top-1 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg py-1 w-48">
-                    {item.subActions?.map(subItem => (
-                        <ContextMenuItem key={subItem.label} item={subItem} onClose={onClose} />
+                    {item.subActions?.map((subItem, index) => (
+                        <ContextMenuItem key={`${subItem.label}-${index}`} item={subItem} onClose={onClose} />
                     ))}
                 </div>
             )}
@@ -74,7 +79,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onClose, actions
       style={{ top: y, left: x }}
       className="absolute z-50 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg py-1 w-48 animate-in fade-in zoom-in-95 duration-100"
     >
-      {actions.map((item) => <ContextMenuItem key={item.label} item={item} onClose={onClose} /> )}
+      {actions.map((item, index) => <ContextMenuItem key={`${item.label}-${index}`} item={item} onClose={onClose} /> )}
     </div>
   );
 };

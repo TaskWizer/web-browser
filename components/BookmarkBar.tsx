@@ -6,6 +6,8 @@ interface BookmarkBarProps {
   onSelectBookmark: (url: string) => void;
   onNavigateInNewTab: (url: string) => void;
   onDrop: (url: string) => void;
+  onBookmarkContextMenu?: (e: React.MouseEvent, bookmarkId: string) => void;
+  onToolbarContextMenu?: (e: React.MouseEvent) => void;
 }
 
 const getFaviconUrl = (url: string) => {
@@ -17,14 +19,21 @@ const getFaviconUrl = (url: string) => {
     }
 }
 
-export const BookmarkBar: React.FC<BookmarkBarProps> = ({ bookmarks, onSelectBookmark, onNavigateInNewTab, onDrop }) => {
+export const BookmarkBar: React.FC<BookmarkBarProps> = ({
+  bookmarks,
+  onSelectBookmark,
+  onNavigateInNewTab,
+  onDrop,
+  onBookmarkContextMenu,
+  onToolbarContextMenu
+}) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragOver(true);
   };
-  
+
   const handleDragLeave = () => {
       setIsDragOver(false);
   };
@@ -37,7 +46,7 @@ export const BookmarkBar: React.FC<BookmarkBarProps> = ({ bookmarks, onSelectBoo
           onDrop(url);
       }
   };
-  
+
   const handleMouseDown = (e: React.MouseEvent, url: string) => {
       if (e.button === 1) { // Middle mouse button
           e.preventDefault();
@@ -45,18 +54,34 @@ export const BookmarkBar: React.FC<BookmarkBarProps> = ({ bookmarks, onSelectBoo
       }
   };
 
+  const handleBookmarkContextMenu = (e: React.MouseEvent, bookmarkId: string) => {
+    e.preventDefault();
+    if (onBookmarkContextMenu) {
+      onBookmarkContextMenu(e, bookmarkId);
+    }
+  };
+
+  const handleToolbarContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onToolbarContextMenu) {
+      onToolbarContextMenu(e);
+    }
+  };
+
   return (
-    <div 
+    <div
         className={`flex items-center bg-zinc-800 h-10 px-4 gap-2 text-sm flex-shrink-0 border-b border-zinc-700/50 transition-colors ${isDragOver ? 'bg-indigo-500/20' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onContextMenu={handleToolbarContextMenu}
     >
       {bookmarks.map(bookmark => (
-        <button 
-            key={bookmark.id} 
+        <button
+            key={bookmark.id}
             onClick={() => onSelectBookmark(bookmark.url)}
             onMouseDown={(e) => handleMouseDown(e, bookmark.url)}
+            onContextMenu={(e) => handleBookmarkContextMenu(e, bookmark.id)}
             className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-700 transition-colors"
         >
           <img src={getFaviconUrl(bookmark.url)} alt="" className="w-4 h-4" />

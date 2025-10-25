@@ -22,17 +22,17 @@ const PagePreview: React.FC<PagePreviewProps> = ({ tab }) => {
   if (tab.screenshotUrl) {
     return (
       <div className="relative w-full h-full bg-zinc-800 group">
-        <img 
-            src={tab.screenshotUrl} 
-            alt={`Screenshot of ${tab.title}`} 
-            className="w-full h-full object-contain" 
+        <img
+            src={tab.screenshotUrl}
+            alt={`Screenshot of ${tab.title}`}
+            className="w-full h-full object-contain"
         />
         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <a 
-                href={tab.url} 
-                target="_blank" 
+            <a
+                href={tab.url}
+                target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-lg hover:bg-indigo-500 transition-colors text-lg font-semibold"
+                className="px-6 py-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-500 transition-colors text-lg font-semibold"
             >
                 Open Site in a New Secure Tab
             </a>
@@ -41,18 +41,46 @@ const PagePreview: React.FC<PagePreviewProps> = ({ tab }) => {
     );
   }
 
+  // Fallback view when screenshot is not available - show a simplified preview
+  const getHostname = (url: string) => {
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return url;
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-zinc-900 text-zinc-300 text-center p-4">
-        <h2 className="text-2xl font-semibold text-red-400 mb-2">Could not load page preview</h2>
-        <p className="text-zinc-400 mb-6 max-w-md">The page might be offline, block screenshot services, or the URL may be incorrect.</p>
-        <a 
-            href={tab.url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md shadow-lg hover:bg-indigo-500 transition-colors"
-        >
-            Try Opening in New Tab
-        </a>
+    <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 text-zinc-300 text-center p-8">
+        <div className="max-w-2xl w-full bg-zinc-800/50 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-zinc-700/50">
+            <div className="mb-6">
+                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                    </svg>
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-2">{getHostname(tab.url)}</h2>
+                <p className="text-zinc-400 text-sm mb-4 break-all">{tab.url}</p>
+            </div>
+
+            <div className="space-y-4">
+                <p className="text-zinc-300 leading-relaxed">
+                    This browser simulates web navigation. To view the actual website, click the button below to open it in a new browser tab.
+                </p>
+
+                <a
+                    href={tab.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-full shadow-lg hover:from-indigo-500 hover:to-purple-500 transition-all transform hover:scale-105 font-semibold"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Open in New Tab
+                </a>
+            </div>
+        </div>
     </div>
   );
 };

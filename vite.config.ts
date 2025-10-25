@@ -4,6 +4,11 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+
+    // Support both VITE_ prefixed and non-prefixed environment variables
+    const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || '';
+    const modelName = env.VITE_GEMINI_MODEL || env.GEMINI_MODEL || 'models/gemma-3-27b-it';
+
     return {
       server: {
         port: 3000,
@@ -11,9 +16,12 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        // Legacy support for process.env
+        'process.env.API_KEY': JSON.stringify(apiKey),
+        'process.env.GEMINI_API_KEY': JSON.stringify(apiKey),
+        'process.env.GEMINI_MODEL': JSON.stringify(modelName),
       },
+      // Vite automatically exposes VITE_ prefixed env vars to import.meta.env
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),

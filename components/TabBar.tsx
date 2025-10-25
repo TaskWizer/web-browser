@@ -15,10 +15,11 @@ interface TabBarProps {
   onContextMenu: (e: React.MouseEvent, tabId: string) => void;
   onToolbarContextMenu: (e: React.MouseEvent) => void;
   onToggleGroupCollapse: (groupId: string) => void;
+  onGroupContextMenu?: (e: React.MouseEvent, groupId: string) => void;
 }
 
 export const TabBar: React.FC<TabBarProps> = ({
-  tabs, tabGroups, activeTabId, isVertical, onSelectTab, onCloseTab, onNewTab, onContextMenu, onToolbarContextMenu, onToggleGroupCollapse
+  tabs, tabGroups, activeTabId, isVertical, onSelectTab, onCloseTab, onNewTab, onContextMenu, onToolbarContextMenu, onToggleGroupCollapse, onGroupContextMenu
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   
@@ -48,7 +49,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         <div className="flex flex-col bg-zinc-900 w-64 h-full p-2 gap-1 overflow-y-auto">
           {tabGroups.map(group => (
             <div key={group.id} className="flex flex-col gap-1">
-              <TabGroupHeader group={group} onToggleCollapse={onToggleGroupCollapse} />
+              <TabGroupHeader group={group} onToggleCollapse={onToggleGroupCollapse} onContextMenu={onGroupContextMenu} />
               {!group.isCollapsed && renderTabs(groupedTabs[group.id] || [], group.color)}
             </div>
           ))}
@@ -64,14 +65,14 @@ export const TabBar: React.FC<TabBarProps> = ({
       }}>
         {tabGroups.map(group => (
           <div key={group.id} className="flex items-center h-full gap-px p-1 bg-zinc-800/50 rounded-lg">
-            <TabGroupHeader group={group} onToggleCollapse={onToggleGroupCollapse} />
+            <TabGroupHeader group={group} onToggleCollapse={onToggleGroupCollapse} onContextMenu={onGroupContextMenu} />
             {!group.isCollapsed && renderTabs(groupedTabs[group.id] || [], group.color)}
           </div>
         ))}
         {renderTabs(groupedTabs['ungrouped'] || [])}
       </div>
-      <div 
-        className="flex-grow h-full" 
+      <div
+        className="flex-grow h-full"
         onContextMenu={onToolbarContextMenu}
       ></div>
       <button onClick={onNewTab} className="ml-1 p-1.5 rounded-full hover:bg-zinc-700 transition-colors flex-shrink-0">

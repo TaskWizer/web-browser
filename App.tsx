@@ -86,23 +86,38 @@ const App: React.FC = () => {
         try {
             const hostname = new URL(tab.url).hostname;
             const screenshotUrl = `https://image.thum.io/get/width/1920/crop/1080/noanimate/${encodeURIComponent(tab.url)}`;
-            
+
+            // Set a timeout for screenshot loading (5 seconds)
+            const timeoutId = setTimeout(() => {
+                if (!isCancelled) {
+                    console.warn(`Screenshot loading timed out for ${tab.url}`);
+                    setTabs(prevTabs => prevTabs.map(t =>
+                        t.id === tab.id
+                            ? { ...t, isLoading: false, title: hostname, screenshotUrl: null }
+                            : t
+                    ));
+                }
+            }, 5000);
+
             // Preload the image to check if it's valid before updating state
             const img = new Image();
             img.onload = () => {
+                clearTimeout(timeoutId);
                 if (!isCancelled) {
-                    setTabs(prevTabs => prevTabs.map(t => 
-                        t.id === tab.id 
-                            ? { ...t, isLoading: false, title: hostname, screenshotUrl } 
+                    setTabs(prevTabs => prevTabs.map(t =>
+                        t.id === tab.id
+                            ? { ...t, isLoading: false, title: hostname, screenshotUrl }
                             : t
                     ));
                 }
             };
             img.onerror = () => {
+                clearTimeout(timeoutId);
                 if (!isCancelled) {
-                     setTabs(prevTabs => prevTabs.map(t => 
-                        t.id === tab.id 
-                            ? { ...t, isLoading: false, title: "Failed to load", screenshotUrl: null } 
+                    console.warn(`Screenshot failed to load for ${tab.url}, showing fallback view`);
+                    setTabs(prevTabs => prevTabs.map(t =>
+                        t.id === tab.id
+                            ? { ...t, isLoading: false, title: hostname, screenshotUrl: null }
                             : t
                     ));
                 }
@@ -112,9 +127,10 @@ const App: React.FC = () => {
         } catch (error) {
             console.error("Navigation failed:", error);
             if (!isCancelled) {
-                setTabs(prevTabs => prevTabs.map(t => 
-                    t.id === loadingTab.id 
-                        ? { ...t, isLoading: false, title: "Failed to load", screenshotUrl: null } 
+                const title = tab.url.includes('://') ? new URL(tab.url).hostname : tab.url;
+                setTabs(prevTabs => prevTabs.map(t =>
+                    t.id === loadingTab.id
+                        ? { ...t, isLoading: false, title, screenshotUrl: null }
                         : t
                 ));
             }
@@ -230,12 +246,104 @@ const App: React.FC = () => {
       updateTabForSearch(false, answer);
   };
   
+  const handleDuplicateTab = (tabId: string) => {
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+    const duplicatedTab = createNewTab(tab.url, tab.title);
+    duplicatedTab.screenshotUrl = tab.screenshotUrl;
+    duplicatedTab.geminiSearchResult = tab.geminiSearchResult;
+    duplicatedTab.isLoading = false;
+    setTabs(prev => [...prev, duplicatedTab]);
+    setActiveTabId(duplicatedTab.id);
+  };
+
+  const handlePinTab = (tabId: string) => {
+    // Pin functionality - could be implemented by adding a 'pinned' property to Tab type
+    console.log('Pin tab:', tabId);
+    // For now, just show a message
+    alert('Pin tab feature coming soon!');
+  };
+
+  const handleMoveTabToGroup = (tabId: string, groupId: string | null) => {
+    setTabs(prevTabs => prevTabs.map(tab =>
+      tab.id === tabId ? { ...tab, groupId } : tab
+    ));
+  };
+
+  const handleCreateTabGroup = (tabId: string) => {
+    const groupName = prompt('Enter group name:');
+    if (!groupName) return;
+
+    const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+
+    const newGroup: TabGroup = {
+      id: Date.now().toString(),
+      name: groupName,
+      color,
+      isCollapsed: false,
+    };
+
+    setTabGroups(prev => [...prev, newGroup]);
+    handleMoveTabToGroup(tabId, newGroup.id);
+  };
+
+  const handleCloseOtherTabs = (tabId: string) => {
+    const tabToKeep = tabs.find(t => t.id === tabId);
+    if (!tabToKeep) return;
+
+    const tabsToClose = tabs.filter(t => t.id !== tabId);
+    setClosedTabs(prev => [...tabsToClose, ...prev]);
+    setTabs([tabToKeep]);
+    setActiveTabId(tabId);
+  };
+
+  const handleCloseTabsToRight = (tabId: string) => {
+    const tabIndex = tabs.findIndex(t => t.id === tabId);
+    if (tabIndex === -1) return;
+
+    const tabsToClose = tabs.slice(tabIndex + 1);
+    setClosedTabs(prev => [...tabsToClose, ...prev]);
+    setTabs(tabs.slice(0, tabIndex + 1));
+  };
+
   const handleContextMenu = (e: React.MouseEvent, tabId: string) => {
     e.preventDefault();
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+
+    const tabIndex = tabs.findIndex(t => t.id === tabId);
+    const hasTabsToRight = tabIndex < tabs.length - 1;
+    const hasOtherTabs = tabs.length > 1;
+
+    const groupActions: ContextMenuAction[] = tabGroups.map(group => ({
+      label: group.name,
+      action: () => handleMoveTabToGroup(tabId, group.id),
+    }));
+
     const actions: ContextMenuAction[] = [
-      { label: "New Tab", action: handleNewTab },
-      { label: "Reload", action: () => { const tab = tabs.find(t=>t.id === tabId); if(tab) handleNavigate(tab.url, { fromHistory: {newIndex: tab.historyIndex }}) } },
+      { label: "Reload Tab", action: () => handleNavigate(tab.url, { fromHistory: {newIndex: tab.historyIndex }}) },
+      { label: "Duplicate Tab", action: () => handleDuplicateTab(tabId) },
+      { label: "Pin Tab", action: () => handlePinTab(tabId) },
+      { label: "---" },
+      { label: "Add to Bookmarks", action: () => {
+        if (!tab.url.startsWith('about:')) {
+          setBookmarks(prev => [...prev, {id: Date.now().toString(), url: tab.url, title: tab.title}]);
+        }
+      }, disabled: tab.url.startsWith('about:') || bookmarks.some(b => b.url === tab.url) },
+      { label: "---" },
+      {
+        label: "Move to Group",
+        subActions: [
+          { label: "New Group...", action: () => handleCreateTabGroup(tabId) },
+          ...(groupActions.length > 0 ? [{ label: "---" }, ...groupActions] : []),
+          ...(tab.groupId ? [{ label: "---" }, { label: "Remove from Group", action: () => handleMoveTabToGroup(tabId, null) }] : []),
+        ]
+      },
+      { label: "---" },
       { label: "Close Tab", action: () => handleCloseTab(tabId) },
+      { label: "Close Other Tabs", action: () => handleCloseOtherTabs(tabId), disabled: !hasOtherTabs },
+      { label: "Close Tabs to the Right", action: () => handleCloseTabsToRight(tabId), disabled: !hasTabsToRight },
     ];
     setContextMenu({ x: e.clientX, y: e.clientY, actions });
   };
@@ -255,7 +363,134 @@ const App: React.FC = () => {
         { label: showBookmarkBar ? "Hide Bookmarks Bar" : "Show Bookmarks Bar", action: () => setShowBookmarkBar(!showBookmarkBar) }
     ];
     setContextMenu({ x: e.clientX, y: e.clientY, actions });
-  }
+  };
+
+  const handleBookmarkContextMenu = (e: React.MouseEvent, bookmarkId: string) => {
+    e.preventDefault();
+    const bookmark = bookmarks.find(b => b.id === bookmarkId);
+    if (!bookmark) return;
+
+    const actions: ContextMenuAction[] = [
+      { label: "Open in New Tab", action: () => handleNavigate(bookmark.url, { newTab: true }) },
+      { label: "---" },
+      { label: "Edit...", action: () => {
+        const newTitle = prompt('Edit bookmark title:', bookmark.title);
+        if (newTitle && newTitle.trim()) {
+          setBookmarks(prev => prev.map(b =>
+            b.id === bookmarkId ? { ...b, title: newTitle.trim() } : b
+          ));
+        }
+      }},
+      { label: "Edit URL...", action: () => {
+        const newUrl = prompt('Edit bookmark URL:', bookmark.url);
+        if (newUrl && newUrl.trim()) {
+          setBookmarks(prev => prev.map(b =>
+            b.id === bookmarkId ? { ...b, url: newUrl.trim() } : b
+          ));
+        }
+      }},
+      { label: "---" },
+      { label: "Copy URL", action: () => {
+        navigator.clipboard.writeText(bookmark.url).then(() => {
+          console.log('URL copied to clipboard');
+        }).catch(err => {
+          console.error('Failed to copy URL:', err);
+        });
+      }},
+      { label: "---" },
+      { label: "Delete", action: () => {
+        if (confirm(`Delete bookmark "${bookmark.title}"?`)) {
+          setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));
+        }
+      }},
+    ];
+    setContextMenu({ x: e.clientX, y: e.clientY, actions });
+  };
+
+  const handleBookmarkBarContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const actions: ContextMenuAction[] = [
+      { label: "Add Bookmark...", action: () => {
+        const url = prompt('Enter bookmark URL:');
+        if (!url || !url.trim()) return;
+        const title = prompt('Enter bookmark title:', new URL(url).hostname);
+        if (!title || !title.trim()) return;
+        setBookmarks(prev => [...prev, {
+          id: Date.now().toString(),
+          url: url.trim(),
+          title: title.trim()
+        }]);
+      }},
+      { label: "---" },
+      { label: "Sort by Name", action: () => {
+        setBookmarks(prev => [...prev].sort((a, b) => a.title.localeCompare(b.title)));
+      }},
+      { label: "---" },
+      { label: showBookmarkBar ? "Hide Bookmarks Bar" : "Show Bookmarks Bar", action: () => setShowBookmarkBar(!showBookmarkBar) }
+    ];
+    setContextMenu({ x: e.clientX, y: e.clientY, actions });
+  };
+
+  const handleTabGroupContextMenu = (e: React.MouseEvent, groupId: string) => {
+    e.preventDefault();
+    const group = tabGroups.find(g => g.id === groupId);
+    if (!group) return;
+
+    const groupTabs = tabs.filter(t => t.groupId === groupId);
+
+    const actions: ContextMenuAction[] = [
+      { label: "Rename Group...", action: () => {
+        const newName = prompt('Enter new group name:', group.name);
+        if (newName && newName.trim()) {
+          setTabGroups(prev => prev.map(g =>
+            g.id === groupId ? { ...g, name: newName.trim() } : g
+          ));
+        }
+      }},
+      { label: "Change Color...", action: () => {
+        const colors = [
+          { name: 'Red', value: '#ef4444' },
+          { name: 'Orange', value: '#f59e0b' },
+          { name: 'Green', value: '#10b981' },
+          { name: 'Blue', value: '#3b82f6' },
+          { name: 'Purple', value: '#8b5cf6' },
+          { name: 'Pink', value: '#ec4899' },
+        ];
+        const colorChoice = prompt(
+          `Choose a color:\n${colors.map((c, i) => `${i + 1}. ${c.name}`).join('\n')}`,
+          '1'
+        );
+        const colorIndex = parseInt(colorChoice || '1') - 1;
+        if (colorIndex >= 0 && colorIndex < colors.length) {
+          setTabGroups(prev => prev.map(g =>
+            g.id === groupId ? { ...g, color: colors[colorIndex].value } : g
+          ));
+        }
+      }},
+      { label: "---" },
+      { label: "Add New Tab to Group", action: () => {
+        const newTab = createNewTab();
+        newTab.groupId = groupId;
+        setTabs(prev => [...prev, newTab]);
+        setActiveTabId(newTab.id);
+      }},
+      { label: "---" },
+      { label: "Ungroup Tabs", action: () => {
+        setTabs(prevTabs => prevTabs.map(tab =>
+          tab.groupId === groupId ? { ...tab, groupId: null } : tab
+        ));
+        setTabGroups(prev => prev.filter(g => g.id !== groupId));
+      }},
+      { label: "Close Group", action: () => {
+        if (confirm(`Close all ${groupTabs.length} tabs in "${group.name}"?`)) {
+          setClosedTabs(prev => [...groupTabs, ...prev]);
+          setTabs(prevTabs => prevTabs.filter(tab => tab.groupId !== groupId));
+          setTabGroups(prev => prev.filter(g => g.id !== groupId));
+        }
+      }, disabled: groupTabs.length === 0 },
+    ];
+    setContextMenu({ x: e.clientX, y: e.clientY, actions });
+  };
 
   const handleToggleBookmark = () => {
       const tab = tabs.find(t => t.id === activeTabId);
@@ -327,7 +562,14 @@ const App: React.FC = () => {
         onToggleBookmark={handleToggleBookmark}
         onToggleVerticalTabs={() => setIsVerticalTabs(!isVerticalTabs)}
       />
-      {showBookmarkBar && <BookmarkBar bookmarks={bookmarks} onSelectBookmark={handleNavigate} onNavigateInNewTab={(url) => handleNavigate(url, { newTab: true })} onDrop={handleBookmarkDrop} />}
+      {showBookmarkBar && <BookmarkBar
+        bookmarks={bookmarks}
+        onSelectBookmark={handleNavigate}
+        onNavigateInNewTab={(url) => handleNavigate(url, { newTab: true })}
+        onDrop={handleBookmarkDrop}
+        onBookmarkContextMenu={handleBookmarkContextMenu}
+        onToolbarContextMenu={handleBookmarkBarContextMenu}
+      />}
       <main className="flex-grow min-h-0 flex">
         {isVerticalTabs && <TabBar
           tabs={tabs}
@@ -340,6 +582,7 @@ const App: React.FC = () => {
           onContextMenu={handleContextMenu}
           onToolbarContextMenu={handleToolbarContextMenu}
           onToggleGroupCollapse={() => {}}
+          onGroupContextMenu={handleTabGroupContextMenu}
         />}
         <div className="flex-grow min-h-0">
             <BrowserView 
