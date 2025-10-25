@@ -1,7 +1,7 @@
 {
-  "name": "Gemini Browser",
-  "short_name": "Gemini",
-  "description": "AI-powered web browser with Gemini integration",
+  "name": "TaskWizer Browser",
+  "short_name": "TaskWizer",
+  "description": "AI-powered web browser with TaskWizer integration",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

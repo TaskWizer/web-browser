@@ -5,6 +5,7 @@ import { BrowserView } from './components/BrowserView';
 import { BookmarkBar } from './components/BookmarkBar';
 import { WindowControls } from './components/WindowControls';
 import { ContextMenu } from './components/ContextMenu';
+import { BookmarkEditModal } from './components/BookmarkEditModal';
 import type { Tab, TabGroup, Bookmark, ContextMenuAction } from './types';
 import { NEW_TAB_URL, ABOUT_SETTINGS_URL } from './constants';
 import { searchWithGemini } from './services/geminiService';
@@ -53,6 +54,7 @@ const App: React.FC = () => {
   const [tabGroups, setTabGroups] = useLocalStorage<TabGroup[]>('browser-tab-groups-v4', []);
   const [activeTabId, setActiveTabId] = useLocalStorage<string | null>('browser-active-tab-v4', null);
   const [bookmarks, setBookmarks] = useLocalStorage<Bookmark[]>('browser-bookmarks-v4', [
+    { id: 'b0', title: 'Google', url: 'https://www.google.com' },
     { id: 'b1', title: 'Chat', url: 'https://chat.cyopsys.com/' },
     { id: 'b2', title: 'Build', url: 'https://build.cyopsys.com/' },
     { id: 'b3', title: 'WebOS', url: 'https://webos.cyopsys.com/' },
@@ -68,11 +70,13 @@ const App: React.FC = () => {
     { id: 'b13', title: 'Voice', url: 'https://voice.cyopsys.com/' },
     { id: 'b14', title: 'LMS', url: 'https://lms.cyopsys.com/' },
     { id: 'b15', title: 'Map', url: 'https://map.cyopsys.com/' },
+    { id: 'b16', title: 'ONNX Chat', url: 'https://onnx-chat.cyopsys.com/' },
   ]);
   const [closedTabs, setClosedTabs] = useState<Tab[]>([]);
   const [showBookmarkBar, setShowBookmarkBar] = useLocalStorage('browser-show-bookmark-bar-v4', true);
   const [isVerticalTabs, setIsVerticalTabs] = useLocalStorage('browser-vertical-tabs-v4', false);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, actions: ContextMenuAction[] } | null>(null);
+  const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   
   // Initialize tabs on first load
   useEffect(() => {
@@ -386,21 +390,8 @@ const App: React.FC = () => {
     const actions: ContextMenuAction[] = [
       { label: "Open in New Tab", action: () => handleNavigate(bookmark.url, { newTab: true }) },
       { label: "---" },
-      { label: "Edit...", action: () => {
-        const newTitle = prompt('Edit bookmark title:', bookmark.title);
-        if (newTitle && newTitle.trim()) {
-          setBookmarks(prev => prev.map(b =>
-            b.id === bookmarkId ? { ...b, title: newTitle.trim() } : b
-          ));
-        }
-      }},
-      { label: "Edit URL...", action: () => {
-        const newUrl = prompt('Edit bookmark URL:', bookmark.url);
-        if (newUrl && newUrl.trim()) {
-          setBookmarks(prev => prev.map(b =>
-            b.id === bookmarkId ? { ...b, url: newUrl.trim() } : b
-          ));
-        }
+      { label: "Edit Bookmark...", action: () => {
+        setEditingBookmark(bookmark);
       }},
       { label: "---" },
       { label: "Copy URL", action: () => {
@@ -611,6 +602,22 @@ const App: React.FC = () => {
           y={contextMenu.y}
           actions={contextMenu.actions}
           onClose={() => setContextMenu(null)}
+        />
+      )}
+      {editingBookmark && (
+        <BookmarkEditModal
+          bookmark={editingBookmark}
+          onSave={(updatedBookmark) => {
+            setBookmarks(prev => prev.map(b =>
+              b.id === updatedBookmark.id ? updatedBookmark : b
+            ));
+            setEditingBookmark(null);
+          }}
+          onDelete={(bookmarkId) => {
+            setBookmarks(prev => prev.filter(b => b.id !== bookmarkId));
+            setEditingBookmark(null);
+          }}
+          onClose={() => setEditingBookmark(null)}
         />
       )}
     </div>

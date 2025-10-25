@@ -28,6 +28,7 @@ export interface Bookmark {
   id: string;
   title: string;
   url: string;
+  iconUrl?: string;
 }
 
 export interface ContextMenuAction {

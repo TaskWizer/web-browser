@@ -38,7 +38,7 @@ export const GeminiSearchResult: React.FC<GeminiSearchResultProps> = ({ result }
         <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-indigo-500/10 to-zinc-800/10 rounded-lg border border-zinc-700/50">
           <div className="flex-shrink-0 text-indigo-400 mt-1">{ICONS.SPARKLES}</div>
           <div>
-            <h2 className="text-lg font-semibold text-indigo-400 mb-4">Gemini's Answer</h2>
+            <h2 className="text-lg font-semibold text-indigo-400 mb-4">AI Answer</h2>
             <div 
               className="prose prose-invert prose-p:text-zinc-300 prose-strong:text-zinc-100 prose-h1:text-zinc-50 prose-h2:text-zinc-100 prose-h3:text-zinc-200 prose-code:text-indigo-300 leading-relaxed"
               dangerouslySetInnerHTML={renderMarkdown(result.answer)}

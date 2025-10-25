@@ -1,5 +1,5 @@
-// Service Worker for Gemini Browser PWA
-const CACHE_NAME = 'gemini-browser-v1';
+// Service Worker for TaskWizer Browser PWA
+const CACHE_NAME = 'taskwizer-browser-v1';
 const OFFLINE_URL = '/';
 
 // Assets to cache on install

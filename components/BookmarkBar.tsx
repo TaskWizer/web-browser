@@ -10,9 +10,14 @@ interface BookmarkBarProps {
   onToolbarContextMenu?: (e: React.MouseEvent) => void;
 }
 
-const getFaviconUrl = (url: string) => {
+const getFaviconUrl = (bookmark: Bookmark) => {
+    // Use custom icon if provided
+    if (bookmark.iconUrl) {
+        return bookmark.iconUrl;
+    }
+    // Otherwise use Google favicon service
     try {
-        const hostname = new URL(url).hostname;
+        const hostname = new URL(bookmark.url).hostname;
         return `https://www.google.com/s2/favicons?domain=${hostname}&sz=16`;
     } catch (error) {
         return `https://www.google.com/s2/favicons?domain=google.com`;
@@ -56,6 +61,7 @@ export const BookmarkBar: React.FC<BookmarkBarProps> = ({
 
   const handleBookmarkContextMenu = (e: React.MouseEvent, bookmarkId: string) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event from bubbling to toolbar context menu
     if (onBookmarkContextMenu) {
       onBookmarkContextMenu(e, bookmarkId);
     }
@@ -84,7 +90,15 @@ export const BookmarkBar: React.FC<BookmarkBarProps> = ({
             onContextMenu={(e) => handleBookmarkContextMenu(e, bookmark.id)}
             className="flex items-center gap-2 px-2 py-1 rounded hover:bg-zinc-700 transition-colors"
         >
-          <img src={getFaviconUrl(bookmark.url)} alt="" className="w-4 h-4" />
+          <img
+            src={getFaviconUrl(bookmark)}
+            alt=""
+            className="w-4 h-4"
+            onError={(e) => {
+              // Fallback to default icon on error
+              e.currentTarget.src = 'https://www.google.com/s2/favicons?domain=google.com&sz=16';
+            }}
+          />
           <span className="text-zinc-300 truncate">{bookmark.title}</span>
         </button>
       ))}
