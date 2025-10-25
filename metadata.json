@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Browser",
+  "description": "A web-based browser simulation featuring tabbed browsing, bookmarks, and a safe page preview 'proxy' for external sites. Experience a modern, sleek interface for managing your web exploration.",
+  "requestFramePermissions": []
+}
