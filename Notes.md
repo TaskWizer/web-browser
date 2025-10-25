@@ -189,6 +189,14 @@ Critical: The UI looked good and you completely broke it, it looks like a web-br
 Critical: The web browsing is still not working, audit and fix.
 Audit and test the application end to end and fix any issues, errors, warnings, etc. and get the web browsing working reliably.
 
+
+The main app/page is scrolling slightly, fix this (just the browser content within the frame should have scroll).
+Add Tab groups, and bookmark manager icon and settings to the left of the bookmarks bar.
+Dragging and dropping tabs and bookmarks do not work.
+Middle click mouse button on home should open a new home tab.
+Move the "New Tab" (aka. "+") button to the left side next to the tabs.
+When the user toggles the tabs to the left virtually, the minimize, maximize, and close buttons on the tabs should also move to the left (cleaning up the top space). Also, make it clear when the toggle is enabled (with a different color or icon, etc.)
+
 ## Execution Principles
 - **Work autonomously**: Make informed decisions without asking questions
 - **Deep research first**: Use `codebase-retrieval` and `git-commit-retrieval` before every change
