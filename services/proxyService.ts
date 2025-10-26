@@ -128,9 +128,10 @@ export async function fetchThroughProxy(
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
   const proxies = [finalConfig.primaryProxy, ...finalConfig.fallbackProxies];
   
-  // Validate URL
+  // Validate URL (basic format) and client-side pre-SSRF checks
+  let urlObj: URL;
   try {
-    new URL(url);
+    urlObj = new URL(url);
   } catch (error) {
     return {
       success: false,
@@ -138,7 +139,59 @@ export async function fetchThroughProxy(
       renderMode: 'error',
     };
   }
-  
+
+  // Allow only http/https
+  const isAllowedScheme = urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+  if (!isAllowedScheme) {
+    return {
+      success: false,
+      error: 'Blocked by SSRF policy: scheme not allowed',
+      renderMode: 'error',
+    };
+  }
+
+  // Quick client-side literal host checks (cannot DNS resolve in browser)
+  const hostname = urlObj.hostname.toLowerCase();
+  const isIPv4Literal = /^\d+\.\d+\.\d+\.\d+$/.test(hostname);
+  const isLocalhost = hostname === 'localhost' || hostname.endsWith('.localhost');
+
+  const inRange = (ip: string, base: string, bits: number) => {
+    const toInt = (s: string) => s.split('.').map(Number).reduce((acc, n) => (acc << 8) + (n & 255), 0);
+    const ipInt = toInt(ip);
+    const baseInt = toInt(base);
+    const mask = bits === 0 ? 0 : (~0 << (32 - bits)) >>> 0;
+    return (ipInt & mask) === (baseInt & mask);
+  };
+
+  if (isLocalhost) {
+    return {
+      success: false,
+      error: 'Blocked by SSRF policy: localhost not allowed',
+      renderMode: 'error',
+    };
+  }
+
+  if (isIPv4Literal) {
+    const ip = hostname;
+    const blocked = (
+      inRange(ip, '127.0.0.0', 8)  ||
+      inRange(ip, '10.0.0.0', 8)   ||
+      inRange(ip, '172.16.0.0', 12)||
+      inRange(ip, '192.168.0.0', 16)||
+      inRange(ip, '169.254.0.0', 16)||
+      inRange(ip, '100.64.0.0', 10)||
+      inRange(ip, '0.0.0.0', 8)    ||
+      ip === '255.255.255.255'
+    );
+    if (blocked) {
+      return {
+        success: false,
+        error: 'Blocked by SSRF policy: private/special IP literal not allowed',
+        renderMode: 'error',
+      };
+    }
+  }
+
   // Try each proxy in sequence
   for (let i = 0; i < proxies.length; i++) {
     const proxyUrl = proxies[i];
