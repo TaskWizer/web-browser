@@ -1,8 +1,47 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { validateUrlWithDns, ALLOWED_SCHEMES } from './lib/ssrf.js';
 import { Readable } from 'node:stream';
 
 const app = express();
+
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10); // 1 minute default
+const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10); // 100 requests/minute default
+
+// Create rate limiter for /api/proxy endpoint
+const proxyRateLimiter = rateLimit({
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: RATE_LIMIT_MAX_REQUESTS,
+  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false, // Disable `X-RateLimit-*` headers (use standard RateLimit-* instead)
+  message: { error: 'Rate limit exceeded', retryAfter: null }, // Will be populated by handler
+  handler: (req, res) => {
+    const retryAfter = Math.ceil(req.rateLimit.resetTime.getTime() / 1000 - Date.now() / 1000);
+    console.warn(`[rate-limit] IP ${req.ip} exceeded rate limit`);
+    res.status(429).json({
+      error: 'Rate limit exceeded',
+      retryAfter,
+    });
+  },
+  // Use IP from X-Forwarded-For if behind proxy, otherwise req.ip
+  // Note: express-rate-limit will handle IPv6 subnet masking automatically
+  keyGenerator: (req) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded) {
+      return forwarded.split(',')[0].trim();
+    }
+    return req.ip;
+  },
+  // Disable IPv6 subnet validation since we're using a custom keyGenerator
+  validate: {
+    keyGeneratorIpFallback: false,
+  },
+  skip: (req) => {
+    // Skip rate limiting for health check endpoint
+    return req.path === '/api/proxy/ping';
+  },
+});
 
 // Basic CORS for frontend access (Vite dev @ :5173 and prod)
 app.use((req, res, next) => {
@@ -61,7 +100,8 @@ async function fetchWithFollow(inputUrl, options = {}) {
   }
 }
 
-app.get('/api/proxy', async (req, res) => {
+// Apply rate limiting to /api/proxy endpoint
+app.get('/api/proxy', proxyRateLimiter, async (req, res) => {
   const target = req.query.url;
   if (!target || typeof target !== 'string') {
     return res.status(400).json({ error: 'Missing url parameter' });
