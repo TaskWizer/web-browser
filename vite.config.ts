@@ -13,6 +13,14 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        proxy: {
+          '/api': {
+            target: 'http://127.0.0.1:3001',
+            changeOrigin: true,
+            // keep path as-is (/api/proxy)
+            rewrite: (p) => p,
+          }
+        }
       },
       plugins: [react()],
       define: {

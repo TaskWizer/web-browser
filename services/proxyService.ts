@@ -23,13 +23,21 @@ export interface ProxyResponse {
   renderMode?: 'advanced' | 'fallback' | 'error';
 }
 
+function inferPrimaryProxy(): string {
+  if (typeof window !== 'undefined' && window.location) {
+    const origin = window.location.origin;
+    const isDev = /localhost:5173|127\.0\.0\.1:5173/.test(origin);
+    return isDev ? 'http://127.0.0.1:3001/api/proxy?url=' : `${origin}/api/proxy?url=`;
+  }
+  return 'http://127.0.0.1:3001/api/proxy?url=';
+}
+
 const DEFAULT_CONFIG: ProxyConfig = {
-  primaryProxy: 'https://api.allorigins.win/raw?url=',
-  fallbackProxies: [
-    'https://corsproxy.io/?',
-    'https://api.codetabs.com/v1/proxy?quest=',
-  ],
-  timeout: 10000, // 10 seconds
+  // Use SSRF-enforcing proxy; dev -> 3001, prod -> same origin
+  primaryProxy: inferPrimaryProxy(),
+  // No third-party fallbacks to avoid bypassing SSRF enforcement
+  fallbackProxies: [],
+  timeout: 15000, // 15 seconds
 };
 
 /**
