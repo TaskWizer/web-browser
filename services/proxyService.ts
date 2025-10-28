@@ -26,17 +26,25 @@ export interface ProxyResponse {
 function inferPrimaryProxy(): string {
   if (typeof window !== 'undefined' && window.location) {
     const origin = window.location.origin;
+    // Only use local SSRF-enforcing backend in development mode (port 5173)
     const isDev = /localhost:5173|127\.0\.0\.1:5173/.test(origin);
-    return isDev ? 'http://127.0.0.1:3001/api/proxy?url=' : `${origin}/api/proxy?url=`;
+    if (isDev) {
+      return 'http://127.0.0.1:3001/api/proxy?url=';
+    }
+    // In production/preview, use third-party CORS proxy (Cloudflare Pages has no backend)
+    return 'https://corsproxy.io/?';
   }
-  return 'http://127.0.0.1:3001/api/proxy?url=';
+  // Fallback for SSR/build time
+  return 'https://corsproxy.io/?';
 }
 
 const DEFAULT_CONFIG: ProxyConfig = {
-  // Use SSRF-enforcing proxy; dev -> 3001, prod -> same origin
   primaryProxy: inferPrimaryProxy(),
-  // No third-party fallbacks to avoid bypassing SSRF enforcement
-  fallbackProxies: [],
+  // Fallback proxies for production (not used in dev to enforce SSRF protection)
+  fallbackProxies: [
+    'https://api.codetabs.com/v1/proxy?quest=',
+    'https://api.allorigins.win/raw?url=',
+  ],
   timeout: 15000, // 15 seconds
 };
 

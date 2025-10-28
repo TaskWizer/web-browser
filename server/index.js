@@ -1,6 +1,22 @@
+/**
+ * SSRF-enforcing proxy server for DEVELOPMENT MODE ONLY.
+ *
+ * This server provides SSRF protection and rate limiting during local development.
+ * In production (Cloudflare Pages), the frontend uses third-party CORS proxies.
+ *
+ * To run in development:
+ *   Terminal 1: npm run server:start
+ *   Terminal 2: npm run dev
+ *
+ * The frontend automatically detects the environment:
+ *   - Development (localhost:5173): Uses http://127.0.0.1:3001/api/proxy (this server)
+ *   - Production/Preview: Uses https://api.allorigins.win/raw?url= (third-party)
+ */
+
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { validateUrlWithDns, ALLOWED_SCHEMES } from './lib/ssrf.js';
+import { responseCache } from './lib/cache.js';
 import { Readable } from 'node:stream';
 
 const app = express();
@@ -131,28 +147,70 @@ app.get('/api/proxy', proxyRateLimiter, async (req, res) => {
     return res.status(400).json({ error: `Blocked by SSRF policy: ${validation.reason || 'denied'}` });
   }
 
+  // Check cache first
+  const cached = responseCache.get(target);
+  if (cached) {
+    const remainingTTL = responseCache.getRemainingTTL(target);
+    console.log(`[cache] HIT ${target} (TTL: ${remainingTTL}s)`);
+
+    // Set cache status headers
+    res.setHeader('X-Cache-Status', 'HIT');
+    res.setHeader('X-Cache-TTL', remainingTTL.toString());
+
+    // Set cached headers
+    Object.entries(cached.headers).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+
+    // Send cached response
+    res.status(cached.status);
+    return res.send(cached.body);
+  }
+
+  console.log(`[cache] MISS ${target}`);
+
   try {
     const upstream = await fetchWithFollow(target, { timeoutMs: 15000, maxRedirects: 5 });
 
-    // Propagate status
-    res.status(upstream.status);
+    // Headers to strip (prevent iframe blocking, CSP restrictions, and encoding issues)
+    const headersToStrip = new Set([
+      'x-frame-options',
+      'content-security-policy',
+      'content-security-policy-report-only',
+      'set-cookie',  // Security: don't leak cookies to client
+      'set-cookie2',
+      'content-encoding',  // Node's fetch auto-decompresses, so don't forward this
+      'transfer-encoding',  // We're re-streaming, so don't forward this
+    ]);
 
-    // Copy selective headers
-    const contentType = upstream.headers.get('content-type');
-    if (contentType) res.setHeader('Content-Type', contentType);
-    const cacheControl = upstream.headers.get('cache-control');
-    if (cacheControl) res.setHeader('Cache-Control', cacheControl);
-    // DO NOT forward Set-Cookie for security
+    // Collect headers for caching
+    const responseHeaders = {};
+    upstream.headers.forEach((value, key) => {
+      const lowerKey = key.toLowerCase();
+      if (!headersToStrip.has(lowerKey)) {
+        responseHeaders[key] = value;
+      }
+    });
 
-    // Pipe body
-    if (upstream.body) {
-      // Convert Web stream to Node stream
-      const nodeStream = Readable.fromWeb(upstream.body);
-      nodeStream.on('error', () => res.end());
-      nodeStream.pipe(res);
-    } else {
-      res.end();
+    // Read body into buffer for caching
+    const bodyBuffer = upstream.body ? Buffer.from(await upstream.arrayBuffer()) : Buffer.alloc(0);
+
+    // Check if we should cache this response
+    if (responseCache.shouldCache(upstream.status, upstream.headers)) {
+      responseCache.set(target, bodyBuffer, upstream.status, responseHeaders);
     }
+
+    // Set cache status header
+    res.setHeader('X-Cache-Status', 'MISS');
+
+    // Set response headers
+    Object.entries(responseHeaders).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+
+    // Send response
+    res.status(upstream.status);
+    res.send(bodyBuffer);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     res.status(502).json({ error: `Upstream fetch failed: ${msg}` });
