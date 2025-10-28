@@ -5,6 +5,7 @@ import http from 'node:http';
 let serverProcess;
 let baseUrl;
 let responseCache;
+let cookieStore;
 
 before(async () => {
   // Import and start the server
@@ -14,6 +15,10 @@ before(async () => {
   // Import cache for clearing between tests
   const cacheModule = await import('../lib/cache.js');
   responseCache = cacheModule.responseCache;
+
+  // Import cookie store to destroy it after tests
+  const cookieModule = await import('../lib/cookies.js');
+  cookieStore = cookieModule.cookieStore;
 
   // Start server on port 0 to get a random available port
   await new Promise((resolve) => {
@@ -29,6 +34,12 @@ before(async () => {
 after(() => {
   if (serverProcess) {
     serverProcess.close();
+  }
+  if (responseCache) {
+    responseCache.destroy();
+  }
+  if (cookieStore) {
+    cookieStore.destroy();
   }
 });
 

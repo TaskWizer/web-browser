@@ -17,6 +17,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { validateUrlWithDns, ALLOWED_SCHEMES } from './lib/ssrf.js';
 import { responseCache } from './lib/cache.js';
+import { cookieStore } from './lib/cookies.js';
 import { Readable } from 'node:stream';
 
 const app = express();
@@ -84,7 +85,7 @@ function isAllowedMethod(method) {
 }
 
 async function fetchWithFollow(inputUrl, options = {}) {
-  const { timeoutMs = 10000, maxRedirects = 5 } = options;
+  const { timeoutMs = 10000, maxRedirects = 5, headers = {}, onRedirect = null } = options;
   let currentUrl = inputUrl;
   let redirects = 0;
 
@@ -92,10 +93,15 @@ async function fetchWithFollow(inputUrl, options = {}) {
     const { signal, cancel } = withTimeout(timeoutMs);
     try {
       // Do not allow automatic redirects so we can re-validate
-      const resp = await fetch(currentUrl, { redirect: 'manual', signal });
+      const resp = await fetch(currentUrl, { redirect: 'manual', signal, headers });
 
       // Handle manual redirects
       if (resp.status >= 300 && resp.status < 400 && resp.headers.get('location')) {
+        // Call onRedirect callback if provided (for cookie capture)
+        if (onRedirect) {
+          onRedirect(resp, currentUrl);
+        }
+
         if (redirects >= maxRedirects) {
           return new Response('Too many redirects', { status: 508 });
         }
@@ -170,14 +176,50 @@ app.get('/api/proxy', proxyRateLimiter, async (req, res) => {
   console.log(`[cache] MISS ${target}`);
 
   try {
-    const upstream = await fetchWithFollow(target, { timeoutMs: 15000, maxRedirects: 5 });
+    // Get stored cookies for this domain
+    const cookieHeader = cookieStore.getCookies(target);
+    const fetchHeaders = {};
+    if (cookieHeader) {
+      fetchHeaders['Cookie'] = cookieHeader;
+      console.log(`[cookies] Sending cookies to ${target}: ${cookieHeader}`);
+    }
+
+    // Callback to capture cookies from redirect responses
+    const onRedirect = (resp, url) => {
+      const redirectCookies = [];
+      resp.headers.forEach((value, key) => {
+        if (key.toLowerCase() === 'set-cookie') {
+          redirectCookies.push(value);
+        }
+      });
+      if (redirectCookies.length > 0) {
+        cookieStore.storeCookies(url, redirectCookies);
+        console.log(`[cookies] Stored ${redirectCookies.length} cookie(s) from redirect ${url}`);
+      }
+    };
+
+    const upstream = await fetchWithFollow(target, { timeoutMs: 15000, maxRedirects: 5, headers: fetchHeaders, onRedirect });
+
+    // Capture Set-Cookie headers from final response
+    const setCookieHeaders = [];
+    upstream.headers.forEach((value, key) => {
+      if (key.toLowerCase() === 'set-cookie') {
+        setCookieHeaders.push(value);
+      }
+    });
+
+    // Store cookies from final upstream response
+    if (setCookieHeaders.length > 0) {
+      cookieStore.storeCookies(target, setCookieHeaders);
+      console.log(`[cookies] Stored ${setCookieHeaders.length} cookie(s) from ${target}`);
+    }
 
     // Headers to strip (prevent iframe blocking, CSP restrictions, and encoding issues)
     const headersToStrip = new Set([
       'x-frame-options',
       'content-security-policy',
       'content-security-policy-report-only',
-      'set-cookie',  // Security: don't leak cookies to client
+      'set-cookie',  // Security: don't leak cookies to client (we manage them server-side)
       'set-cookie2',
       'content-encoding',  // Node's fetch auto-decompresses, so don't forward this
       'transfer-encoding',  // We're re-streaming, so don't forward this
