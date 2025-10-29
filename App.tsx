@@ -91,77 +91,50 @@ const App: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Effect to handle async fetching for loading tabs
+  // Effect to handle loading state for tabs
+  // We no longer fetch screenshots - SandboxedBrowser handles all rendering
   useEffect(() => {
     const loadingTab = tabs.find(tab => tab.isLoading);
     if (!loadingTab || loadingTab.url.startsWith('about:') || loadingTab.url.startsWith('gemini://')) {
         return;
     }
 
-    let isCancelled = false;
-
-    const fetchPreview = async (tab: Tab) => {
-        try {
-            const hostname = new URL(tab.url).hostname;
-            const screenshotUrl = `https://image.thum.io/get/width/1920/crop/1080/noanimate/${encodeURIComponent(tab.url)}`;
-
-            // Set a timeout for screenshot loading (5 seconds)
-            const timeoutId = setTimeout(() => {
-                if (!isCancelled) {
-                    console.warn(`Screenshot loading timed out for ${tab.url}`);
-                    setTabs(prevTabs => prevTabs.map(t =>
-                        t.id === tab.id
-                            ? { ...t, isLoading: false, title: hostname, screenshotUrl: null }
-                            : t
-                    ));
-                }
-            }, 5000);
-
-            // Preload the image to check if it's valid before updating state
-            const img = new Image();
-            img.onload = () => {
-                clearTimeout(timeoutId);
-                if (!isCancelled) {
-                    setTabs(prevTabs => prevTabs.map(t =>
-                        t.id === tab.id
-                            ? { ...t, isLoading: false, title: hostname, screenshotUrl }
-                            : t
-                    ));
-                }
-            };
-            img.onerror = () => {
-                clearTimeout(timeoutId);
-                if (!isCancelled) {
-                    console.warn(`Screenshot failed to load for ${tab.url}, showing fallback view`);
-                    setTabs(prevTabs => prevTabs.map(t =>
-                        t.id === tab.id
-                            ? { ...t, isLoading: false, title: hostname, screenshotUrl: null }
-                            : t
-                    ));
-                }
-            }
-            img.src = screenshotUrl;
-
-        } catch (error) {
-            console.error("Navigation failed:", error);
-            if (!isCancelled) {
-                const title = tab.url.includes('://') ? new URL(tab.url).hostname : tab.url;
-                setTabs(prevTabs => prevTabs.map(t =>
-                    t.id === loadingTab.id
-                        ? { ...t, isLoading: false, title, screenshotUrl: null }
-                        : t
-                ));
-            }
-        }
+    // Simply mark the tab as loaded and set the title to the hostname
+    try {
+      const hostname = new URL(loadingTab.url).hostname;
+      setTabs(prevTabs => prevTabs.map(t =>
+        t.id === loadingTab.id
+          ? { ...t, isLoading: false, title: hostname }
+          : t
+      ));
+    } catch (error) {
+      console.error("Failed to parse URL:", error);
+      setTabs(prevTabs => prevTabs.map(t =>
+        t.id === loadingTab.id
+          ? { ...t, isLoading: false, title: loadingTab.url }
+          : t
+      ));
     }
-
-    fetchPreview(loadingTab);
-
-    return () => {
-        isCancelled = true;
-    };
   }, [tabs, setTabs]);
 
+  // Keyboard shortcut: Ctrl+Shift+T (or Cmd+Shift+T on Mac) to reopen last closed tab
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+Shift+T or Cmd+Shift+T
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+        e.preventDefault();
+        if (closedTabs.length > 0) {
+          const [lastClosed, ...rest] = closedTabs;
+          setClosedTabs(rest);
+          setTabs(prev => [...prev, lastClosed]);
+          setActiveTabId(lastClosed.id);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [closedTabs, setClosedTabs, setTabs, setActiveTabId]);
 
   const handleNavigate = useCallback((url: string, options: { newTab?: boolean; fromHistory?: { newIndex: number } } = {}) => {
     const { newTab = false, fromHistory } = options;
@@ -351,7 +324,6 @@ const App: React.FC = () => {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
     const duplicatedTab = createNewTab(tab.url, tab.title);
-    duplicatedTab.screenshotUrl = tab.screenshotUrl;
     duplicatedTab.geminiSearchResult = tab.geminiSearchResult;
     duplicatedTab.isLoading = false;
     setTabs(prev => [...prev, duplicatedTab]);
@@ -624,7 +596,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-zinc-900 text-white font-sans antialiased overflow-hidden">
-      <header className="flex items-center justify-between h-10 bg-zinc-900 flex-shrink-0">
+      <header className={`flex items-center justify-between bg-zinc-900 flex-shrink-0 ${isVerticalTabs ? 'h-0' : 'h-10'}`}>
         {!isVerticalTabs && <TabBar
           tabs={tabs}
           tabGroups={tabGroups}
@@ -637,7 +609,7 @@ const App: React.FC = () => {
           onToolbarContextMenu={handleToolbarContextMenu}
           onToggleGroupCollapse={() => {}}
         />}
-        <WindowControls />
+        {!isVerticalTabs && <WindowControls />}
       </header>
       <AddressBar
         activeTab={activeTab}

@@ -30,30 +30,60 @@ export const NewTabPage: React.FC<NewTabPageProps> = ({ onSearch }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-zinc-900 text-white p-4">
-      <div className="text-center">
-        <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
-          TaskWizer Chat
-        </h1>
-        <p className="text-zinc-400 mb-8 max-w-md mx-auto">Your AI-powered conversation companion</p>
+    <>
+      <style>{`
+        @keyframes search-glow-pulse {
+          0%, 100% {
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.6);
+          }
+        }
+
+        @keyframes search-glow-pulse-focus {
+          0%, 100% {
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.6);
+          }
+          50% {
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.8);
+          }
+        }
+
+        .search-input-glow {
+          animation: search-glow-pulse 3s ease-in-out infinite;
+          will-change: box-shadow;
+        }
+
+        .search-input-glow:focus {
+          animation: search-glow-pulse-focus 2s ease-in-out infinite;
+        }
+      `}</style>
+      <div className="flex flex-col items-center justify-center h-full bg-zinc-900 text-white p-4">
+        <div className="text-center">
+          <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
+            TaskWizer Chat
+          </h1>
+          <p className="text-zinc-400 mb-8 max-w-md mx-auto">Your AI-powered conversation companion</p>
+
+          <form onSubmit={handleSearchSubmit} className="w-full max-w-xl mx-auto mb-6">
+              <input
+                  type="text"
+                  name="search"
+                  placeholder="Search with Google..."
+                  className="search-input-glow w-full px-5 py-3 bg-zinc-800 border border-zinc-700 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              />
+          </form>
         
-        <form onSubmit={handleSearchSubmit} className="w-full max-w-xl mx-auto mb-6">
-            <input
-                type="text"
-                name="search"
-                placeholder="Search with Google..."
-                className="w-full px-5 py-3 bg-zinc-800 border border-zinc-700 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-            />
-        </form>
-        
-        <button
-          onClick={handleInspireMe}
-          className="group inline-flex items-center gap-2 px-6 py-2 bg-zinc-800/50 border border-zinc-700 rounded-full text-zinc-300 hover:text-white hover:border-indigo-500 transition-all duration-200"
-        >
-          {ICONS.SPARKLES}
-          <span>Inspire Me</span>
-        </button>
+          <button
+            onClick={handleInspireMe}
+            className="group inline-flex items-center gap-2 px-6 py-2 bg-zinc-800/50 border border-zinc-700 rounded-full text-zinc-300 hover:text-white hover:border-indigo-500 transition-all duration-200"
+          >
+            {ICONS.SPARKLES}
+            <span>Inspire Me</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };

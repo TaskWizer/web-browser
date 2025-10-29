@@ -222,34 +222,6 @@ export const AddressBar: React.FC<AddressBarProps> = ({
 
   return (
     <>
-      <style>{`
-        @keyframes glow-pulse {
-          0%, 100% {
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.3), 0 0 20px rgba(99, 102, 241, 0.2), 0 0 30px rgba(99, 102, 241, 0.1);
-          }
-          50% {
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5), 0 0 30px rgba(99, 102, 241, 0.3), 0 0 45px rgba(99, 102, 241, 0.2);
-          }
-        }
-
-        @keyframes glow-pulse-focus {
-          0%, 100% {
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.5), 0 0 30px rgba(99, 102, 241, 0.3), 0 0 45px rgba(99, 102, 241, 0.2);
-          }
-          50% {
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.7), 0 0 40px rgba(99, 102, 241, 0.4), 0 0 60px rgba(99, 102, 241, 0.3);
-          }
-        }
-
-        .address-bar-input {
-          animation: glow-pulse 3s ease-in-out infinite;
-          will-change: box-shadow;
-        }
-
-        .address-bar-input:focus {
-          animation: glow-pulse-focus 2s ease-in-out infinite;
-        }
-      `}</style>
       <div className="flex items-center bg-zinc-800 h-12 px-2 gap-1 border-b border-zinc-700/50 flex-shrink-0">
         <button onClick={onBack} disabled={!canGoBack} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white disabled:text-zinc-600 disabled:hover:bg-transparent transition-colors">{ICONS.CHEVRON_LEFT}</button>
         <button onClick={onForward} disabled={!canGoForward} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white disabled:text-zinc-600 disabled:hover:bg-transparent transition-colors">{ICONS.CHEVRON_RIGHT}</button>
@@ -283,7 +255,7 @@ export const AddressBar: React.FC<AddressBarProps> = ({
                 e.target.select();
               }}
               onBlur={() => setIsInputFocused(false)}
-              className="address-bar-input w-full h-full bg-zinc-900 rounded-full text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-9 pr-4"
+              className="w-full h-full bg-zinc-900 rounded-full text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-9 pr-4"
               placeholder={placeholder || "Search Google or enter an address"}
             />
           </form>

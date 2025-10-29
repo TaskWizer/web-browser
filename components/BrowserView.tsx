@@ -35,30 +35,8 @@ const PagePreview: React.FC<PagePreviewProps> = ({ tab }) => {
     );
   }
 
-  // If screenshot is available, show it with overlay
-  if (tab.screenshotUrl) {
-    return (
-      <div className="relative w-full h-full bg-zinc-800 group">
-        <img
-            src={tab.screenshotUrl}
-            alt={`Screenshot of ${tab.title}`}
-            className="w-full h-full object-contain"
-        />
-        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <a
-                href={tab.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-500 transition-colors text-lg font-semibold"
-            >
-                Open Site in a New Secure Tab
-            </a>
-        </div>
-      </div>
-    );
-  }
-
-  // Use SandboxedBrowser for actual rendering with CORS bypass
+  // Always use SandboxedBrowser for actual rendering with CORS bypass
+  // This provides full interactive website rendering instead of static screenshots
   if (useSandboxedBrowser) {
     return (
       <div className="relative w-full h-full">

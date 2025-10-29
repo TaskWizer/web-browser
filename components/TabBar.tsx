@@ -46,14 +46,41 @@ export const TabBar: React.FC<TabBarProps> = ({
   
   if (isVertical) {
       return (
-        <div className="flex flex-col bg-zinc-900 w-64 h-full p-2 gap-1 overflow-y-auto">
-          {tabGroups.map(group => (
-            <div key={group.id} className="flex flex-col gap-1">
-              <TabGroupHeader group={group} onToggleCollapse={onToggleGroupCollapse} onContextMenu={onGroupContextMenu} />
-              {!group.isCollapsed && renderTabs(groupedTabs[group.id] || [], group.color)}
+        <div className="flex flex-col bg-zinc-900 w-64 h-full">
+          {/* Scrollable tabs area */}
+          <div className="flex-grow overflow-y-auto p-2 gap-1 flex flex-col">
+            {tabGroups.map(group => (
+              <div key={group.id} className="flex flex-col gap-1">
+                <TabGroupHeader group={group} onToggleCollapse={onToggleGroupCollapse} onContextMenu={onGroupContextMenu} />
+                {!group.isCollapsed && renderTabs(groupedTabs[group.id] || [], group.color)}
+              </div>
+            ))}
+            {renderTabs(groupedTabs['ungrouped'] || [])}
+          </div>
+
+          {/* Bottom controls: New Tab button and Window Controls */}
+          <div className="flex-shrink-0 p-2 border-t border-zinc-700/50 flex flex-col gap-2">
+            <button
+              onClick={onNewTab}
+              className="w-full flex items-center justify-center gap-2 p-2 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+            >
+              {ICONS.ADD}
+              <span className="text-sm">New Tab</span>
+            </button>
+
+            {/* Window Controls */}
+            <div className="flex items-center justify-center gap-2">
+              <button className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-full transition-colors">
+                {ICONS.WINDOW_MINIMIZE}
+              </button>
+              <button className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-full transition-colors">
+                {ICONS.WINDOW_MAXIMIZE}
+              </button>
+              <button className="p-1.5 text-white bg-red-600/80 hover:bg-red-500 rounded-full transition-colors">
+                {ICONS.WINDOW_CLOSE}
+              </button>
             </div>
-          ))}
-          {renderTabs(groupedTabs['ungrouped'] || [])}
+          </div>
         </div>
       )
   }
