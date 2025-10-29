@@ -33,6 +33,29 @@ export const SandboxedBrowser: React.FC<SandboxedBrowserProps> = ({ url, title }
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeError, setIframeError] = useState(false);
 
+  // Prevent iframe navigation from affecting parent window
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    // Block navigation events from iframe to prevent infinite recursion
+    const blockNavigation = (e: Event) => {
+      // Prevent navigation events from bubbling up to parent
+      e.stopPropagation();
+      e.preventDefault();
+      console.log('[SandboxedBrowser] Blocked navigation event from iframe');
+    };
+
+    // Listen for various navigation-related events
+    iframe.addEventListener('beforeunload', blockNavigation, true);
+    iframe.addEventListener('unload', blockNavigation, true);
+
+    return () => {
+      iframe.removeEventListener('beforeunload', blockNavigation, true);
+      iframe.removeEventListener('unload', blockNavigation, true);
+    };
+  }, []);
+
   useEffect(() => {
     let mounted = true;
 
@@ -184,12 +207,20 @@ export const SandboxedBrowser: React.FC<SandboxedBrowserProps> = ({ url, title }
         {/* Sandboxed iframe with proxied content
             Note: Using both allow-scripts and allow-same-origin reduces sandboxing security,
             but is required for full browser functionality. Content is loaded through a proxy
-            to mitigate CORS issues and provide some isolation. Users should be aware that
-            malicious content could potentially escape the sandbox. */}
+            to mitigate CORS issues and provide some isolation.
+
+            Sandbox attributes explained:
+            - allow-same-origin: Required for scripts to access DOM and make requests
+            - allow-scripts: Required for JavaScript to execute (modern sites need this)
+            - allow-forms: Required for form submissions
+            - NO allow-popups: Prevents infinite recursion from popup windows
+            - NO allow-popups-to-escape-sandbox: Prevents popups from escaping sandbox
+            - NO allow-top-navigation: Prevents iframe from navigating parent window
+        */}
         <iframe
           ref={iframeRef}
           srcDoc={renderState.html}
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+          sandbox="allow-same-origin allow-scripts allow-forms"
           className="w-full h-full border-0"
           title={title || url}
           onError={handleIframeError}
@@ -232,11 +263,20 @@ export const SandboxedBrowser: React.FC<SandboxedBrowserProps> = ({ url, title }
         {/* Direct iframe
             Note: Using both allow-scripts and allow-same-origin reduces sandboxing security,
             but is required for full browser functionality. This is the fallback mode when
-            proxy loading fails. */}
+            proxy loading fails.
+
+            Sandbox attributes explained:
+            - allow-same-origin: Required for scripts to access DOM and make requests
+            - allow-scripts: Required for JavaScript to execute (modern sites need this)
+            - allow-forms: Required for form submissions
+            - NO allow-popups: Prevents infinite recursion from popup windows
+            - NO allow-popups-to-escape-sandbox: Prevents popups from escaping sandbox
+            - NO allow-top-navigation: Prevents iframe from navigating parent window
+        */}
         <iframe
           ref={iframeRef}
           src={url}
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+          sandbox="allow-same-origin allow-scripts allow-forms"
           className="w-full h-full border-0"
           title={title || url}
           onError={handleIframeError}

@@ -136,6 +136,30 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [closedTabs, setClosedTabs, setTabs, setActiveTabId]);
 
+  // Auto-clear loading state for external URLs after a short delay
+  // This prevents infinite loading spinners when SandboxedBrowser takes over rendering
+  useEffect(() => {
+    const loadingTabs = tabs.filter(tab => tab.isLoading && !tab.url.startsWith('about:') && !tab.url.startsWith('gemini://'));
+
+    if (loadingTabs.length === 0) return;
+
+    // Clear loading state after 500ms to allow SandboxedBrowser to start rendering
+    const timer = setTimeout(() => {
+      setTabs(prevTabs => prevTabs.map(tab => {
+        if (tab.isLoading && !tab.url.startsWith('about:') && !tab.url.startsWith('gemini://')) {
+          return {
+            ...tab,
+            isLoading: false,
+            title: new URL(tab.url).hostname || tab.url,
+          };
+        }
+        return tab;
+      }));
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [tabs, setTabs]);
+
   const handleNavigate = useCallback((url: string, options: { newTab?: boolean; fromHistory?: { newIndex: number } } = {}) => {
     const { newTab = false, fromHistory } = options;
 

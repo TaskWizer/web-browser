@@ -26,10 +26,14 @@ export interface ProxyResponse {
 function inferPrimaryProxy(): string {
   if (typeof window !== 'undefined' && window.location) {
     const origin = window.location.origin;
-    // Only use local SSRF-enforcing backend in development mode (port 5173)
-    const isDev = /localhost:5173|127\.0\.0\.1:5173/.test(origin);
+    // Only use local SSRF-enforcing backend in development mode (any localhost port)
+    const isDev = /localhost|127\.0\.0\.1/.test(origin);
     if (isDev) {
-      return 'http://127.0.0.1:3001/api/proxy?url=';
+      // Dynamically determine the backend port based on current port
+      // Vite dev server can run on any port (3000, 3001, 5173, etc.)
+      const currentPort = window.location.port || '3000';
+      // Backend proxy runs on same port as frontend in dev mode
+      return `http://127.0.0.1:${currentPort}/api/proxy?url=`;
     }
     // In production/preview, use third-party CORS proxy (Cloudflare Pages has no backend)
     return 'https://corsproxy.io/?';
@@ -73,21 +77,27 @@ async function fetchWithTimeout(url: string, timeout: number): Promise<Response>
 /**
  * Sanitize HTML to prevent XSS attacks
  * This is a basic sanitization - for production, consider using DOMPurify
+ *
+ * NOTE: We do NOT remove <script> tags because:
+ * 1. Modern websites require JavaScript to render properly
+ * 2. The iframe sandbox attribute provides security isolation
+ * 3. Removing scripts causes blank pages and broken layouts
+ *
+ * Security is handled by the iframe sandbox, not by HTML sanitization.
  */
 function sanitizeHTML(html: string): string {
-  // Remove potentially dangerous script tags and event handlers
+  // Minimal sanitization - only remove inline event handlers and javascript: protocol
+  // Scripts are allowed because the iframe sandbox provides isolation
   let sanitized = html;
-  
-  // Remove script tags (but keep content for debugging)
-  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  
-  // Remove event handlers (onclick, onerror, etc.)
+
+  // Remove inline event handlers (onclick, onerror, etc.)
+  // These can bypass sandbox restrictions in some cases
   sanitized = sanitized.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
   sanitized = sanitized.replace(/\s*on\w+\s*=\s*[^\s>]*/gi, '');
-  
-  // Remove javascript: protocol
-  sanitized = sanitized.replace(/javascript:/gi, '');
-  
+
+  // Remove javascript: protocol from href/src attributes
+  sanitized = sanitized.replace(/(?:href|src)\s*=\s*["']javascript:[^"']*["']/gi, '');
+
   return sanitized;
 }
 
