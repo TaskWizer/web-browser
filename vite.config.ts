@@ -10,10 +10,10 @@ export default defineConfig(({ mode }) => {
     const modelName = env.VITE_GEMINI_MODEL || env.GEMINI_MODEL || 'models/gemma-3-27b-it';
 
     // Determine build mode based on environment variable
-    const buildMode = env.BUILD_MODE || 'library'; // 'library', 'standalone', or 'spa'
+    const buildMode = env.BUILD_MODE || (mode === 'development' ? 'spa' : 'library'); // 'library', 'standalone', or 'spa'
 
     // Library mode configuration for monorepo package
-    if (buildMode === 'library' || (mode === 'production' && !env.BUILD_MODE)) {
+    if (buildMode === 'library') {
       return {
         plugins: [react()],
         build: {
