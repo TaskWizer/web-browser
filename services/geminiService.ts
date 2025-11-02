@@ -72,7 +72,7 @@ export const searchWithGemini = async (query: string): Promise<string> => {
       contents: prompt,
     });
 
-    return response.text;
+    return response.text || 'No response generated';
   } catch (error) {
     console.error("Error calling Gemini API:", error);
 
