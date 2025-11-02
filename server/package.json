@@ -7,15 +7,19 @@
     "test": "test"
   },
   "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
     "test": "node --test test/*.test.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "TaskWizer Web Browser API Server",
   "type": "module",
   "dependencies": {
     "express": "^4.21.2",
-    "express-rate-limit": "^8.1.0"
+    "express-rate-limit": "^8.1.0",
+    "http-proxy-middleware": "^3.0.3",
+    "cors": "^2.8.5"
   }
 }

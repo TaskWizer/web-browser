@@ -27,10 +27,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:library": "vite build",
+    "build:standalone": "BUILD_MODE=standalone vite build",
+    "build:spa": "BUILD_MODE=spa vite build",
+    "build:pages": "BUILD_MODE=spa vite build",
     "build:types": "tsc --emitDeclarationOnly",
     "build:full": "npm run build:types && npm run build",
     "preview": "vite preview",
-    "server:start": "node server/index.js",
+    "server:start": "cd server && npm start",
     "test": "NODE_ENV=test node --test server/test/*.js",
     "type-check": "tsc --noEmit"
   },

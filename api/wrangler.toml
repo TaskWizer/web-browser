@@ -25,37 +25,16 @@ vars = {
   WEB_BROWSER_MAX_FILE_SIZE = "10485760"
 }
 
-# KV Namespaces
-[[kv_namespaces]]
-binding = "CACHE_KV"
-id = "your-cache-kv-id"
-preview_id = "your-cache-kv-preview-id"
+# Optional: KV Namespaces for production (comment out for local dev)
+# [[kv_namespaces]]
+# binding = "CACHE_KV"
+# id = "your-cache-kv-id"
+# preview_id = "your-cache-kv-preview-id"
 
-[[kv_namespaces]]
-binding = "RATE_LIMIT_KV"
-id = "your-rate-limit-kv-id"
-preview_id = "your-rate-limit-kv-preview-id"
-
-[[kv_namespaces]]
-binding = "SESSIONS_KV"
-id = "your-sessions-kv-id"
-preview_id = "your-sessions-kv-preview-id"
-
-[[kv_namespaces]]
-binding = "ANALYTICS_KV"
-id = "your-analytics-kv-id"
-preview_id = "your-analytics-kv-preview-id"
-
-# D1 Database (if needed for persistent data)
-[[d1_databases]]
-binding = "DB"
-database_name = "taskwizer-web-browser-db"
-database_id = "your-database-id"
-
-# Durable Objects (if needed for stateful sessions)
-[[durable_objects.bindings]]
-name = "BROWSER_SESSION_DO"
-class_name = "BrowserSessionDO"
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT_KV"
+# id = "your-rate-limit-kv-id"
+# preview_id = "your-rate-limit-kv-preview-id"
 
 # Limits and configuration
 [limits]

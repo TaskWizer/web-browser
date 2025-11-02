@@ -10,8 +10,24 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { createAuthService } from '@taskwizer/shared/auth';
-import { createApiResponse, createApiError } from '@taskwizer/shared/utils';
+// Conditional import for shared package or mock
+let createAuthService: any;
+let createApiResponse: any;
+let createApiError: any;
+
+try {
+  const shared = require('@taskwizer/shared/auth');
+  const utils = require('@taskwizer/shared/utils');
+  createAuthService = shared.createAuthService;
+  createApiResponse = utils.createApiResponse;
+  createApiError = utils.createApiError;
+} catch (error) {
+  // Fallback to mock for standalone builds
+  const mock = require('../src/shared-mock');
+  createAuthService = mock.createAuthService;
+  createApiResponse = mock.createApiResponse;
+  createApiError = mock.createApiError;
+}
 import { rateLimitMiddleware } from './middleware/rateLimit';
 import { browserRoutes } from './routes/browser';
 import { contentRoutes } from './routes/content';

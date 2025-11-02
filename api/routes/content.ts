@@ -7,7 +7,20 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { createApiResponse, createApiError } from '@taskwizer/shared/utils';
+// Conditional import for shared package or mock
+let createApiResponse: any;
+let createApiError: any;
+
+try {
+  const utils = require('@taskwizer/shared/utils');
+  createApiResponse = utils.createApiResponse;
+  createApiError = utils.createApiError;
+} catch (error) {
+  // Fallback to mock for standalone builds
+  const mock = require('../../../src/shared-mock');
+  createApiResponse = mock.createApiResponse;
+  createApiError = mock.createApiError;
+}
 import type { Env } from '../../../src/types';
 
 const contentRoutes = new Hono<{ Bindings: Env }>();

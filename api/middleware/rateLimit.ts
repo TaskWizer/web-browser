@@ -5,8 +5,21 @@
  */
 
 import { createMiddleware } from 'hono/factory';
-import { createApiError } from '@taskwizer/shared/utils';
-import { RATE_LIMIT_CONFIG } from '@taskwizer/shared/constants';
+// Conditional import for shared package or mock
+let createApiError: any;
+let RATE_LIMIT_CONFIG: any;
+
+try {
+  const utils = require('@taskwizer/shared/utils');
+  const constants = require('@taskwizer/shared/constants');
+  createApiError = utils.createApiError;
+  RATE_LIMIT_CONFIG = constants.RATE_LIMIT_CONFIG;
+} catch (error) {
+  // Fallback to mock for standalone builds
+  const mock = require('../../src/shared-mock');
+  createApiError = mock.createApiError;
+  RATE_LIMIT_CONFIG = mock.RATE_LIMIT_CONFIG;
+}
 
 interface RateLimitInfo {
   count: number;

@@ -9,8 +9,11 @@ export default defineConfig(({ mode }) => {
     const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || '';
     const modelName = env.VITE_GEMINI_MODEL || env.GEMINI_MODEL || 'models/gemma-3-27b-it';
 
+    // Determine build mode based on environment variable
+    const buildMode = env.BUILD_MODE || 'library'; // 'library', 'standalone', or 'spa'
+
     // Library mode configuration for monorepo package
-    if (mode === 'production') {
+    if (buildMode === 'library' || (mode === 'production' && !env.BUILD_MODE)) {
       return {
         plugins: [react()],
         build: {
@@ -21,7 +24,7 @@ export default defineConfig(({ mode }) => {
             formats: ['es', 'umd']
           },
           rollupOptions: {
-            external: ['react', 'react-dom'],
+            external: ['react', 'react-dom', '@taskwizer/shared'],
             output: {
               globals: {
                 react: 'React',
@@ -45,8 +48,20 @@ export default defineConfig(({ mode }) => {
       };
     }
 
-    // Development mode with server
+    // Standalone/SPA mode for Cloudflare Pages deployment
+    const isStandalone = buildMode === 'standalone' || buildMode === 'spa';
+
     return {
+      plugins: [react()],
+      build: isStandalone ? {
+        outDir: 'dist',
+        emptyOutDir: true,
+        rollupOptions: {
+          input: {
+            main: path.resolve(__dirname, 'index.html')
+          }
+        }
+      } : undefined,
       server: {
         port: 3000,
         host: '0.0.0.0',
@@ -59,12 +74,14 @@ export default defineConfig(({ mode }) => {
           }
         }
       },
-      plugins: [react()],
       define: {
         // Legacy support for process.env
         'process.env.API_KEY': JSON.stringify(apiKey),
         'process.env.GEMINI_API_KEY': JSON.stringify(apiKey),
         'process.env.GEMINI_MODEL': JSON.stringify(modelName),
+        // Build mode flags
+        'process.env.BUILD_MODE': JSON.stringify(buildMode),
+        'process.env.STANDALONE': JSON.stringify(isStandalone),
       },
       // Vite automatically exposes VITE_ prefixed env vars to import.meta.env
       resolve: {
@@ -72,6 +89,19 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, '.'),
         },
         dedupe: ['react', 'react-dom']
-      }
+      },
+      // For standalone mode, handle shared package dependencies
+      ...(isStandalone && {
+        define: {
+          ...((process as any).env.define || {}),
+          'process.env.API_KEY': JSON.stringify(apiKey),
+          'process.env.GEMINI_API_KEY': JSON.stringify(apiKey),
+          'process.env.GEMINI_MODEL': JSON.stringify(modelName),
+          'process.env.BUILD_MODE': JSON.stringify(buildMode),
+          'process.env.STANDALONE': JSON.stringify(isStandalone),
+          // Mock shared package imports for standalone builds
+          'globalThis.__STANDALONE__': JSON.stringify(true),
+        }
+      })
     };
 });

@@ -1,0 +1,57 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'packages/web-browser/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'packages/web-browser/**' ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Cloudflare Pages
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: packages/web-browser/package-lock.json
+
+      - name: Install dependencies
+        working-directory: packages/web-browser
+        run: npm ci
+
+      - name: Build for Cloudflare Pages
+        working-directory: packages/web-browser
+        run: npm run build:pages
+        env:
+          VITE_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          VITE_GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'models/gemma-3-27b-it' }}
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: taskwizer-web-browser
+          directory: packages/web-browser/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Preview (Pull Requests)
+        if: github.event_name == 'pull_request'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: taskwizer-web-browser
+          directory: packages/web-browser/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          deploymentTrigger: pull-request
