@@ -9,6 +9,43 @@ export default defineConfig(({ mode }) => {
     const apiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || '';
     const modelName = env.VITE_GEMINI_MODEL || env.GEMINI_MODEL || 'models/gemma-3-27b-it';
 
+    // Library mode configuration for monorepo package
+    if (mode === 'production') {
+      return {
+        plugins: [react()],
+        build: {
+          lib: {
+            entry: path.resolve(__dirname, 'src/index.ts'),
+            name: 'TaskWizerWebBrowser',
+            fileName: (format) => `index.${format}.js`,
+            formats: ['es', 'umd']
+          },
+          rollupOptions: {
+            external: ['react', 'react-dom'],
+            output: {
+              globals: {
+                react: 'React',
+                'react-dom': 'ReactDOM'
+              }
+            }
+          }
+        },
+        define: {
+          // Legacy support for process.env
+          'process.env.API_KEY': JSON.stringify(apiKey),
+          'process.env.GEMINI_API_KEY': JSON.stringify(apiKey),
+          'process.env.GEMINI_MODEL': JSON.stringify(modelName),
+        },
+        resolve: {
+          alias: {
+            '@': path.resolve(__dirname, '.'),
+          },
+          extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
+        }
+      };
+    }
+
+    // Development mode with server
     return {
       server: {
         port: 3000,

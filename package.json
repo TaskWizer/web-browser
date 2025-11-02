@@ -1,16 +1,41 @@
 {
-  "name": "taskwizer-browser",
+  "name": "@taskwizer/web-browser",
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "description": "TaskWizer Web Browser - Browser automation and web content viewer",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./components": {
+      "types": "./dist/components/index.d.ts",
+      "import": "./dist/components/index.js"
+    },
+    "./services": {
+      "types": "./dist/services/index.d.ts",
+      "import": "./dist/services/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:full": "npm run build:types && npm run build",
     "preview": "vite preview",
     "server:start": "node server/index.js",
-    "test": "NODE_ENV=test node --test server/test/*.js"
+    "test": "NODE_ENV=test node --test server/test/*.js",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@taskwizer/shared": "file:../shared",
     "@google/genai": "^1.27.0",
     "epubjs": "^0.3.93",
     "pdfjs-dist": "^5.4.296",

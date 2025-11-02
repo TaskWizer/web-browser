@@ -4,8 +4,8 @@ import type { ConversationMessage } from "../types";
 // Get API key from environment variables (supports both VITE_ prefix and direct access)
 const getApiKey = (): string | undefined => {
   // Check for Vite environment variable first (for production builds)
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) {
-    return import.meta.env.VITE_GEMINI_API_KEY;
+  if (typeof import.meta !== 'undefined' && (globalThis as any).importMetaEnv?.VITE_GEMINI_API_KEY) {
+    return (globalThis as any).importMetaEnv.VITE_GEMINI_API_KEY;
   }
   // Fallback to process.env for development (injected by Vite config)
   if (typeof process !== 'undefined' && process.env?.API_KEY) {
@@ -44,8 +44,8 @@ export const isGeminiAvailable = (): boolean => {
  * Get the current model name from environment or use default
  */
 const getModelName = (): string => {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_MODEL) {
-    return import.meta.env.VITE_GEMINI_MODEL;
+  if (typeof globalThis !== 'undefined' && (globalThis as any).importMetaEnv?.VITE_GEMINI_MODEL) {
+    return (globalThis as any).importMetaEnv.VITE_GEMINI_MODEL;
   }
   if (typeof process !== 'undefined' && process.env?.GEMINI_MODEL) {
     return process.env.GEMINI_MODEL;
@@ -220,3 +220,14 @@ export const generateSuggestedPrompts = (query: string, answer: string): string[
   const uniquePrompts = Array.from(new Set(allPrompts));
   return uniquePrompts.slice(0, 5);
 };
+
+// Export a class for better TypeScript compatibility
+export class GeminiService {
+  static async searchWithGemini(query: string) {
+    return searchWithGemini(query);
+  }
+
+  static async generateContextualPrompts(query: string, answer: string) {
+    return generateSuggestedPrompts(query, answer);
+  }
+}

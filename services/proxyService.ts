@@ -299,3 +299,14 @@ export function canUseDirectIframe(url: string): boolean {
   }
 }
 
+// Export a class for better TypeScript compatibility
+export class ProxyService {
+  static async fetchContent(url: string, config?: Partial<ProxyConfig>) {
+    return fetchThroughProxy(url, config);
+  }
+
+  static isDomainAllowed(url: string) {
+    return canUseDirectIframe(url);
+  }
+}
+
