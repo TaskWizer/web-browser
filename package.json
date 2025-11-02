@@ -26,7 +26,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "[ \"$CF_PAGES\" = \"1\" ] && npm run build:pages || vite build",
+    "build": "npm run build:pages",
     "build:library": "vite build",
     "build:standalone": "BUILD_MODE=standalone vite build",
     "build:spa": "BUILD_MODE=spa vite build",
