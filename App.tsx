@@ -115,7 +115,7 @@ const App: React.FC = () => {
           : t
       ));
     }
-  }, [tabs, setTabs]);
+  }, [tabs.filter(tab => tab.isLoading).map(tab => tab.id).join(',')]);
 
   // Keyboard shortcut: Ctrl+Shift+T (or Cmd+Shift+T on Mac) to reopen last closed tab
   useEffect(() => {
@@ -158,7 +158,7 @@ const App: React.FC = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [tabs, setTabs]);
+  }, [tabs.filter(tab => tab.isLoading && !tab.url.startsWith('about:') && !tab.url.startsWith('gemini://')).map(tab => tab.id).join(',')]);
 
   const handleNavigate = useCallback((url: string, options: { newTab?: boolean; fromHistory?: { newIndex: number } } = {}) => {
     const { newTab = false, fromHistory } = options;

@@ -15,7 +15,12 @@ export default defineConfig(({ mode }) => {
     // Library mode configuration for monorepo package
     if (buildMode === 'library') {
       return {
-        plugins: [react()],
+        plugins: [
+          react({
+            jsxImportSource: 'react',
+            fastRefresh: true,
+          })
+        ],
         build: {
           lib: {
             entry: path.resolve(__dirname, 'src/index.ts'),
@@ -52,7 +57,12 @@ export default defineConfig(({ mode }) => {
     const isStandalone = buildMode === 'standalone' || buildMode === 'spa';
 
     return {
-      plugins: [react()],
+      plugins: [
+        react({
+          jsxImportSource: 'react',
+          fastRefresh: true,
+        })
+      ],
       build: isStandalone ? {
         outDir: 'dist',
         emptyOutDir: true,
@@ -93,7 +103,6 @@ export default defineConfig(({ mode }) => {
       // For standalone mode, handle shared package dependencies
       ...(isStandalone && {
         define: {
-          ...((process as any).env.define || {}),
           'process.env.API_KEY': JSON.stringify(apiKey),
           'process.env.GEMINI_API_KEY': JSON.stringify(apiKey),
           'process.env.GEMINI_MODEL': JSON.stringify(modelName),
