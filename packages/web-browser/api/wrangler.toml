@@ -1,0 +1,41 @@
+# Cloudflare Workers configuration for Web Browser API
+name = "taskwizer-web-browser-api"
+main = "index.ts"
+compatibility_date = "2024-01-01"
+
+# Variables for development
+[env.development]
+vars = {
+  ENABLE_WEB_BROWSER_API = "true",
+  WEB_BROWSER_STANDALONE = "true",
+  WEB_BROWSER_API_BASE_PATH = "/api/web-browser",
+  WEB_BROWSER_ENABLE_PDF = "true",
+  WEB_BROWSER_ENABLE_EPUB = "true",
+  WEB_BROWSER_MAX_FILE_SIZE = "10485760"
+}
+
+# Variables for production
+[env.production]
+vars = {
+  ENABLE_WEB_BROWSER_API = "true",
+  WEB_BROWSER_STANDALONE = "true",
+  WEB_BROWSER_API_BASE_PATH = "/api/web-browser",
+  WEB_BROWSER_ENABLE_PDF = "true",
+  WEB_BROWSER_ENABLE_EPUB = "true",
+  WEB_BROWSER_MAX_FILE_SIZE = "10485760"
+}
+
+# Optional: KV Namespaces for production (comment out for local dev)
+# [[kv_namespaces]]
+# binding = "CACHE_KV"
+# id = "your-cache-kv-id"
+# preview_id = "your-cache-kv-preview-id"
+
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT_KV"
+# id = "your-rate-limit-kv-id"
+# preview_id = "your-rate-limit-kv-preview-id"
+
+# Limits and configuration
+[limits]
+cpu_ms = 50000

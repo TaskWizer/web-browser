@@ -1,0 +1,50 @@
+import React from 'react';
+
+interface SettingsPageProps {
+  onNavigate: (url: string) => void;
+}
+
+// Get version from package.json
+const VERSION = '1.0.0';
+
+export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
+  return (
+    <div className="bg-zinc-900 text-white p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Settings</h1>
+        <div className="space-y-6">
+          <div className="bg-zinc-800 p-6 rounded-lg border border-zinc-700">
+            <h2 className="text-xl font-semibold mb-4">Search Provider</h2>
+            <p className="text-zinc-400 mb-4">Select the default search engine for the address bar.</p>
+            <select className="w-full max-w-xs px-4 py-2 bg-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="google">Google</option>
+              <option value="duckduckgo" disabled>DuckDuckGo (coming soon)</option>
+              <option value="bing" disabled>Bing (coming soon)</option>
+            </select>
+          </div>
+
+          {/* Version Information */}
+          <div className="bg-zinc-800 p-6 rounded-lg border border-zinc-700">
+            <h2 className="text-xl font-semibold mb-4">About</h2>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-400">Version</span>
+                <span className="font-mono text-indigo-400">v{VERSION}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-400">Application</span>
+                <span className="text-white">TaskWizer Browser</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-400">Build Date</span>
+                <span className="text-zinc-300">{new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* More settings can be added here */}
+        </div>
+      </div>
+    </div>
+  );
+};

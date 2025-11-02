@@ -1,0 +1,12 @@
+# Cloudflare Pages SPA redirect
+# This ensures all routes are handled by the React app
+# Exclude static assets and API routes
+/assets/*    /assets/:splat    200
+/icon*       /icon*:splat      200
+/manifest.json   /manifest.json  200
+/_headers        /_headers       200
+/_redirects      /_redirects     200
+
+# All other routes go to index.html
+/*    /index.html   200
+
