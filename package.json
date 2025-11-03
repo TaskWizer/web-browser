@@ -26,13 +26,13 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:pages",
-    "build:library": "vite build",
+    "build": "npm run build:library",
+    "build:library": "BUILD_MODE=library vite build",
     "build:standalone": "BUILD_MODE=standalone vite build",
     "build:spa": "BUILD_MODE=spa vite build",
     "build:pages": "BUILD_MODE=spa vite build",
     "build:types": "tsc --emitDeclarationOnly",
-    "build:full": "npm run build:types && npm run build",
+    "build:full": "npm run build:types && npm run build:library",
     "preview": "vite preview",
     "server:start": "cd server && npm start",
     "test": "NODE_ENV=test node --test server/test/*.js",
@@ -43,6 +43,7 @@
     "@tailwindcss/postcss": "^4.1.16",
     "@taskwizer/shared": "file:../shared",
     "epubjs": "^0.3.93",
+    "object-hash": "^3.0.0",
     "pdfjs-dist": "^5.4.394",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -61,6 +62,7 @@
     "tailwindcss": "^3.4.18",
     "typescript": "~5.8.2",
     "vite": "^6.1.8",
+    "vite-plugin-dts": "^4.5.4",
     "vite-plugin-static-copy": "^3.1.4"
   }
 }
