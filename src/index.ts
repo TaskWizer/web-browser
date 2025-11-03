@@ -1,16 +1,16 @@
 // Main entry point for @taskwizer/web-browser package
 
 // Components
-export * from '../components';
+export * from '../packages/web-browser/components';
 
 // Services
-export * from '../services';
+export * from '../packages/web-browser/services';
 
 // Types
-export * from '../types';
+export * from '../packages/web-browser/types';
 
 // Main App component
-export { default as WebBrowserApp } from '../App';
+export { default as WebBrowserApp } from '../packages/web-browser/App';
 
 // Configuration
 export interface WebBrowserConfig {

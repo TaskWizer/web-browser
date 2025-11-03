@@ -1,11 +1,20 @@
 import { GoogleGenAI } from "@google/genai";
 import type { ConversationMessage } from "../types";
 
-// Get API key from environment variables (supports both VITE_ prefix and direct access)
+// Get API key from environment variables using load balancing
 const getApiKey = (): string | undefined => {
-  // Check for Vite environment variable first (for production builds)
-  if (typeof import.meta !== 'undefined' && (globalThis as any).importMetaEnv?.VITE_GEMINI_API_KEY) {
-    return (globalThis as any).importMetaEnv.VITE_GEMINI_API_KEY;
+  // Check for multi-key environment variable first
+  if (typeof import.meta !== 'undefined' && (globalThis as any).importMetaEnv?.GOOGLE_API_KEYS) {
+    const keys = (globalThis as any).importMetaEnv.GOOGLE_API_KEYS;
+    if (keys && typeof keys === 'string') {
+      // Return first key from comma-separated list for basic compatibility
+      // In the future, this could integrate with the load balancing system
+      return keys.split(',')[0].trim();
+    }
+  }
+  // Fallback to single key for backward compatibility
+  if (typeof import.meta !== 'undefined' && (globalThis as any).importMetaEnv?.GEMINI_API_KEY) {
+    return (globalThis as any).importMetaEnv.GEMINI_API_KEY;
   }
   // Fallback to process.env for development (injected by Vite config)
   if (typeof process !== 'undefined' && process.env?.API_KEY) {
