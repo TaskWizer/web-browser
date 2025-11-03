@@ -112,33 +112,81 @@ app.post('/api/gemini', async (req, res) => {
   }
 });
 
-// Browser automation endpoints (placeholder for future implementation)
+// Browser automation endpoints - integrated with proxy service
 app.post('/api/browser/navigate', async (req, res) => {
   try {
     const { url } = req.body;
 
-    // For now, just validate the URL and return a success response
-    // In a full implementation, this would control a headless browser
+    // Validate URL format
     if (!url || !url.match(/^https?:\/\/.+/)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid URL format'
+        error: 'Invalid URL format - must start with http:// or https://'
       });
     }
 
-    res.json({
-      success: true,
-      data: {
-        url,
-        status: 'navigated',
-        timestamp: new Date().toISOString()
+    // Test URL accessibility through proxy
+    try {
+      const fetchThroughProxy = (await import('../services/proxyService.js')).fetchThroughProxy;
+      const proxyResponse = await fetchThroughProxy(url);
+
+      if (proxyResponse.success) {
+        res.json({
+          success: true,
+          data: {
+            url,
+            status: 'navigated',
+            proxyUsed: proxyResponse.proxyUsed,
+            renderMode: proxyResponse.renderMode || 'advanced',
+            timestamp: new Date().toISOString()
+          }
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: 'Cannot access URL',
+          details: proxyResponse.error
+        });
       }
-    });
+    } catch (proxyError) {
+      res.status(500).json({
+        success: false,
+        error: 'Proxy service error',
+        details: proxyError.message
+      });
+    }
   } catch (error) {
     console.error('Navigate error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to navigate',
+      details: error.message
+    });
+  }
+});
+
+// Browser navigation history endpoint
+app.post('/api/browser/history', async (req, res) => {
+  try {
+    const { action, url } = req.body;
+
+    // This would integrate with the BrowserService history management
+    // For now, return a basic response
+    res.json({
+      success: true,
+      data: {
+        action,
+        canGoBack: true,
+        canGoForward: false,
+        currentUrl: url || null,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('History error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to handle history action',
       details: error.message
     });
   }
@@ -156,16 +204,36 @@ app.post('/api/content/render', async (req, res) => {
       });
     }
 
-    // For now, just return the content as-is
-    // In a full implementation, this would render markdown, HTML, etc.
-    res.json({
-      success: true,
-      data: {
-        rendered: content,
-        type,
-        timestamp: new Date().toISOString()
-      }
-    });
+    // Use ContentService for proper content rendering
+    try {
+      const { ContentServiceImpl } = await import('../services/contentService.js');
+      const contentService = new ContentServiceImpl();
+
+      const rendered = await contentService.renderContent(content, type);
+      const extractedText = await contentService.extractText(rendered);
+
+      res.json({
+        success: true,
+        data: {
+          rendered,
+          extractedText,
+          type,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (contentError) {
+      console.error('ContentService error:', contentError);
+      // Fallback to basic rendering
+      res.json({
+        success: true,
+        data: {
+          rendered: type === 'markdown' ? `<div class="markdown">${content}</div>` : content,
+          type,
+          fallback: true,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
   } catch (error) {
     console.error('Render error:', error);
     res.status(500).json({
