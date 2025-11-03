@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => {
         plugins: [
           react({
             jsxImportSource: 'react',
+            // @ts-ignore - fastRefresh is deprecated but still supported
             fastRefresh: true,
           })
         ],
@@ -60,6 +61,7 @@ export default defineConfig(({ mode }) => {
       plugins: [
         react({
           jsxImportSource: 'react',
+          // @ts-ignore - fastRefresh is deprecated but still supported
           fastRefresh: true,
         })
       ],

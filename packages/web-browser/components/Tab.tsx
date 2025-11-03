@@ -74,3 +74,6 @@ export const TabComponent: React.FC<TabProps> = ({ tab, groupColor, isActive, on
     </div>
   );
 };
+
+// Export as both TabComponent and Tab for compatibility
+export { TabComponent as Tab };

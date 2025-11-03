@@ -1,13 +1,15 @@
 // Main entry point for @taskwizer/web-browser package
 
 // Components
-export * from '../packages/web-browser/components';
+export { BrowserView, TabBar, NavigationBar, ContentRenderer } from '../packages/web-browser/components';
+export { TabComponent } from '../packages/web-browser/components';
+export type { Tab as TabType } from '../packages/web-browser/types';
 
 // Services
 export * from '../packages/web-browser/services';
 
-// Types
-export * from '../packages/web-browser/types';
+// Types - exclude Tab to avoid duplicate export
+export type { TabGroup, ConversationMessage, GeminiSearchResult, Bookmark, ContextMenuAction } from '../packages/web-browser/types';
 
 // Main App component
 export { default as WebBrowserApp } from '../packages/web-browser/App';

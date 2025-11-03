@@ -30,16 +30,20 @@
   },
   "include": [
     "src/**/*",
-    "components/**/*",
-    "services/**/*",
+    "packages/web-browser/**/*",
     "types.ts",
     "App.tsx",
-    "constants.tsx"
+    "constants.tsx",
+    "components/**/*",
+    "services/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "server",
-    "api"
+    "api",
+    "packages/web-browser/node_modules",
+    "packages/web-browser/dist",
+    "packages/web-browser/api"
   ]
 }
