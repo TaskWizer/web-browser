@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 export interface ContentService {
   renderContent(content: string, type: 'html' | 'markdown' | 'text'): Promise<string>;
   extractText(content: string): Promise<string>;
@@ -55,26 +57,27 @@ export class ContentServiceImpl implements ContentService {
 
   sanitizeHTML(html: string): string {
     try {
-      // Basic HTML sanitization to prevent XSS
-      let sanitized = html;
-
-      // Remove dangerous attributes and protocols
-      sanitized = sanitized.replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, '');
-      sanitized = sanitized.replace(/\s*on\w+\s*=\s*[^\s>]*/gi, '');
-      sanitized = sanitized.replace(/(?:href|src|action|formaction)\s*=\s*["']javascript:[^"']*["']/gi, '');
-      sanitized = sanitized.replace(/(?:href|src|action|formaction)\s*=\s*javascript:[^\s>]*/gi, '');
-
-      // Remove potentially dangerous tags
-      const dangerousTags = ['script', 'object', 'embed', 'iframe', 'form', 'input', 'textarea'];
-      dangerousTags.forEach(tag => {
-        const regex = new RegExp(`<${tag}[^>]*>.*?</${tag}>`, 'gis');
-        sanitized = sanitized.replace(regex, '');
+      // Use DOMPurify for comprehensive HTML sanitization to prevent XSS
+      return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: [
+          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+          'p', 'br', 'strong', 'em', 'u', 'i', 'b',
+          'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+          'blockquote', 'pre', 'code',
+          'a', 'img',
+          'table', 'thead', 'tbody', 'tr', 'th', 'td',
+          'div', 'span', 'section', 'article', 'header', 'footer',
+          'hr'
+        ],
+        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'target', 'rel'],
+        ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+        FORBID_TAGS: ['script', 'object', 'embed', 'iframe', 'form', 'input', 'textarea', 'button', 'select', 'meta', 'link', 'style'],
+        FORBID_ATTR: ['onclick', 'onerror', 'onload', 'onmouseover', 'onfocus', 'onblur', 'onchange', 'onsubmit', 'onreset', 'onselect', 'onkeydown', 'onkeyup', 'onkeypress'],
+        SANITIZE_DOM: true,
+        SANITIZE_NAMED_PROPS: true,
+        WHOLE_DOCUMENT: false,
+        RETURN_DOM: false
       });
-
-      // Remove meta tags that could be used for injection
-      sanitized = sanitized.replace(/<meta[^>]*>/gi, '');
-
-      return sanitized;
     } catch (error) {
       console.error('[ContentService] Error sanitizing HTML:', error);
       return `<div class="sanitized-content">HTML could not be sanitized</div>`;

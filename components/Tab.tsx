@@ -45,8 +45,8 @@ export const TabComponent: React.FC<TabProps> = ({ tab, groupColor, isActive, on
   }
 
   const baseClasses = "relative flex items-center h-full px-3 py-1.5 text-sm cursor-pointer group transition-all duration-200 ease-in-out border-t-2";
-  const activeClasses = "bg-zinc-800 border-indigo-500 text-white";
-  const inactiveClasses = "bg-zinc-900/80 text-zinc-400 hover:bg-zinc-700/50 border-transparent";
+  const activeClasses = "bg-browser-surface border-browser-primary text-white";
+  const inactiveClasses = "bg-browser-bg/80 text-browser-text-muted hover:bg-browser-surface/50 border-transparent";
   const tabShapeClasses = "rounded-t-lg";
 
   return (

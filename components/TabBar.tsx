@@ -46,9 +46,9 @@ export const TabBar: React.FC<TabBarProps> = ({
   
   if (isVertical) {
       return (
-        <div className="flex flex-col bg-zinc-900 w-64 h-full">
+        <div className="flex flex-col w-64 h-full border-r bg-browser-surface border-browser-border">
           {/* Scrollable tabs area */}
-          <div className="flex-grow overflow-y-auto p-2 gap-1 flex flex-col">
+          <div className="flex-grow overflow-y-auto p-2 gap-1 flex flex-col custom-scrollbar">
             {tabGroups.map(group => (
               <div key={group.id} className="flex flex-col gap-1">
                 <TabGroupHeader group={group} onToggleCollapse={onToggleGroupCollapse} onContextMenu={onGroupContextMenu} />
@@ -59,10 +59,10 @@ export const TabBar: React.FC<TabBarProps> = ({
           </div>
 
           {/* Bottom controls: New Tab button and Window Controls */}
-          <div className="flex-shrink-0 p-2 border-t border-zinc-700/50 flex flex-col gap-2">
+          <div className="flex-shrink-0 p-2 border-t flex flex-col gap-2" style={{borderColor: '#2a2a3e'}}>
             <button
               onClick={onNewTab}
-              className="w-full flex items-center justify-center gap-2 p-2 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+              className="browser-button w-full flex items-center justify-center gap-2"
             >
               {ICONS.ADD}
               <span className="text-sm">New Tab</span>
@@ -70,10 +70,10 @@ export const TabBar: React.FC<TabBarProps> = ({
 
             {/* Window Controls */}
             <div className="flex items-center justify-center gap-2">
-              <button className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-full transition-colors">
+              <button className="browser-button p-1.5 rounded-full">
                 {ICONS.WINDOW_MINIMIZE}
               </button>
-              <button className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-700 rounded-full transition-colors">
+              <button className="browser-button p-1.5 rounded-full">
                 {ICONS.WINDOW_MAXIMIZE}
               </button>
               <button className="p-1.5 text-white bg-red-600/80 hover:bg-red-500 rounded-full transition-colors">
@@ -86,12 +86,12 @@ export const TabBar: React.FC<TabBarProps> = ({
   }
 
   return (
-    <div className="flex items-center bg-zinc-900 h-10 pl-2 pr-1 flex-grow min-w-0">
+    <div className="flex items-center h-10 pl-2 pr-1 flex-grow min-w-0 bg-browser-surface">
       <div className="flex items-center h-full gap-px flex-grow min-w-0" ref={scrollRef} onWheel={(e) => {
           if (scrollRef.current) scrollRef.current.scrollLeft += e.deltaY;
       }}>
         {tabGroups.map(group => (
-          <div key={group.id} className="flex items-center h-full gap-px p-1 bg-zinc-800/50 rounded-lg">
+          <div key={group.id} className="flex items-center h-full gap-px p-1 bg-browser-bg/50 rounded-lg border border-browser-border">
             <TabGroupHeader group={group} onToggleCollapse={onToggleGroupCollapse} onContextMenu={onGroupContextMenu} />
             {!group.isCollapsed && renderTabs(groupedTabs[group.id] || [], group.color)}
           </div>
@@ -102,7 +102,7 @@ export const TabBar: React.FC<TabBarProps> = ({
         className="flex-grow h-full"
         onContextMenu={onToolbarContextMenu}
       ></div>
-      <button onClick={onNewTab} className="ml-1 p-1.5 rounded-full hover:bg-zinc-700 transition-colors flex-shrink-0">
+      <button onClick={onNewTab} className="browser-button ml-1 p-1.5 rounded-full flex-shrink-0">
         {ICONS.ADD}
       </button>
     </div>

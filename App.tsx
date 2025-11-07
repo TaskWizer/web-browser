@@ -6,6 +6,9 @@ import { BookmarkBar } from './components/BookmarkBar';
 import { WindowControls } from './components/WindowControls';
 import { ContextMenu } from './components/ContextMenu';
 import { BookmarkEditModal } from './components/BookmarkEditModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { PWAUpdater } from './components/PWAUpdater';
+import { initSentry, reportError } from './lib/sentry';
 import type { Tab, TabGroup, Bookmark, ContextMenuAction } from './types';
 import { NEW_TAB_URL, ABOUT_SETTINGS_URL } from './constants';
 import { streamGeminiResponse, generateSuggestedPrompts } from './services/geminiService';
@@ -51,6 +54,44 @@ const createNewTab = (url: string = NEW_TAB_URL, title: string = "New Tab"): Tab
 });
 
 const App: React.FC = () => {
+  // Initialize Sentry for error tracking
+  useEffect(() => {
+    try {
+      initSentry();
+    } catch (error) {
+      console.error('Failed to initialize Sentry:', error);
+    }
+  }, []);
+
+  // Global error handler for unhandled promise rejections
+  useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      reportError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)), {
+        type: 'unhandled_promise_rejection',
+        stack: event.reason?.stack,
+      });
+    };
+
+    const handleError = (event: ErrorEvent) => {
+      console.error('Global error:', event.error);
+      reportError(event.error || new Error(event.message), {
+        type: 'global_error',
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+      });
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.addEventListener('error', handleError);
+
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener('error', handleError);
+    };
+  }, []);
+
   const [tabs, setTabs] = useLocalStorage<Tab[]>('browser-tabs-v4', []);
   const [tabGroups, setTabGroups] = useLocalStorage<TabGroup[]>('browser-tab-groups-v4', []);
   const [activeTabId, setActiveTabId] = useLocalStorage<string | null>('browser-active-tab-v4', null);
@@ -619,8 +660,19 @@ const App: React.FC = () => {
   const isBookmarked = activeTab ? bookmarks.some(b => b.url === activeTab.url) : false;
 
   return (
-    <div className="flex flex-col h-screen bg-zinc-900 text-white font-sans antialiased overflow-hidden">
-      <header className={`flex items-center justify-between bg-zinc-900 flex-shrink-0 ${isVerticalTabs ? 'h-0' : 'h-10'}`}>
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        // Additional error handling for the entire app
+        console.error('App Error Boundary caught an error:', error, errorInfo);
+        reportError(error, {
+          component: 'App',
+          errorInfo,
+          timestamp: new Date().toISOString(),
+        });
+      }}
+    >
+      <div className="flex flex-col h-screen font-sans antialiased overflow-hidden bg-browser-bg text-browser-text">
+      <header className={`flex items-center justify-between flex-shrink-0 bg-browser-surface border-b border-browser-border ${isVerticalTabs ? 'h-0' : 'h-10'}`}>
         {!isVerticalTabs && <TabBar
           tabs={tabs}
           tabGroups={tabGroups}
@@ -668,8 +720,8 @@ const App: React.FC = () => {
           onToggleGroupCollapse={() => {}}
           onGroupContextMenu={handleTabGroupContextMenu}
         />}
-        <div className="flex-grow min-h-0">
-            <BrowserView 
+        <div className="flex-grow min-h-0 bg-browser-bg">
+            <BrowserView
               activeTab={activeTab}
               onSearch={handleSearch}
               onNavigate={handleNavigate}
@@ -700,7 +752,9 @@ const App: React.FC = () => {
           onClose={() => setEditingBookmark(null)}
         />
       )}
+      <PWAUpdater />
     </div>
+    </ErrorBoundary>
   );
 };
 

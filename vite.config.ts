@@ -1,6 +1,8 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
@@ -63,7 +65,89 @@ export default defineConfig(({ mode }) => {
           jsxImportSource: 'react',
           // @ts-ignore - fastRefresh is deprecated but still supported
           fastRefresh: true,
-        })
+        }),
+        // Sentry plugin for error tracking and source maps
+        sentryVitePlugin({
+          org: process.env.SENTRY_ORG || 'taskwizer',
+          project: process.env.SENTRY_PROJECT || 'web-browser',
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+          // Only upload source maps in production
+          sourcemaps: {
+            assets: './dist/**',
+          },
+        }),
+        // PWA plugin for service worker and offline support
+        VitePWA({
+          registerType: 'autoUpdate',
+          workbox: {
+            globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+            runtimeCaching: [
+              {
+                urlPattern: /^https:\/\/r\.jina\.ai\/.*/i,
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'jina-api-cache',
+                  expiration: {
+                    maxEntries: 10,
+                    maxAgeSeconds: 60 * 60 * 24, // 24 hours
+                  },
+                },
+              },
+              {
+                urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'images-cache',
+                  expiration: {
+                    maxEntries: 100,
+                    maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                  },
+                },
+              },
+              {
+                urlPattern: /\.(?:woff2?|eot|ttf|otf)$/,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'fonts-cache',
+                  expiration: {
+                    maxEntries: 20,
+                    maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                  },
+                },
+              },
+            ],
+          },
+          includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+          manifest: {
+            name: 'TaskWizer Web Browser',
+            short_name: 'TaskWizer',
+            description: 'Advanced web browser with AI-powered search and PWA capabilities',
+            theme_color: '#1a1a2e',
+            background_color: '#0f0f1e',
+            display: 'standalone',
+            orientation: 'portrait-primary',
+            scope: '/',
+            start_url: '/',
+            icons: [
+              {
+                src: 'pwa-192x192.png',
+                sizes: '192x192',
+                type: 'image/png',
+              },
+              {
+                src: 'pwa-512x512.png',
+                sizes: '512x512',
+                type: 'image/png',
+              },
+              {
+                src: 'pwa-512x512.png',
+                sizes: '512x512',
+                type: 'image/png',
+                purpose: 'any maskable',
+              },
+            ],
+          },
+        }),
       ],
       build: isStandalone ? {
         outDir: 'dist',
@@ -79,7 +163,7 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
         proxy: {
           '/api': {
-            target: 'http://127.0.0.1:3001',
+            target: 'http://127.0.0.1:3002',
             changeOrigin: true,
             // keep path as-is (/api/proxy)
             rewrite: (p) => p,

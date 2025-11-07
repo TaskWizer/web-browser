@@ -222,22 +222,22 @@ export const AddressBar: React.FC<AddressBarProps> = ({
 
   return (
     <>
-      <div className="flex items-center bg-zinc-800 h-12 px-2 gap-1 border-b border-zinc-700/50 flex-shrink-0">
-        <button onClick={onBack} disabled={!canGoBack} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white disabled:text-zinc-600 disabled:hover:bg-transparent transition-colors">{ICONS.CHEVRON_LEFT}</button>
-        <button onClick={onForward} disabled={!canGoForward} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white disabled:text-zinc-600 disabled:hover:bg-transparent transition-colors">{ICONS.CHEVRON_RIGHT}</button>
-        <button onClick={onReload} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors">{ICONS.RELOAD}</button>
+      <div className="flex items-center h-12 px-2 gap-1 flex-shrink-0 bg-browser-surface border-b border-browser-border">
+        <button onClick={onBack} disabled={!canGoBack} className="browser-button p-2 rounded-full disabled:text-zinc-600 disabled:hover:bg-transparent">{ICONS.CHEVRON_LEFT}</button>
+        <button onClick={onForward} disabled={!canGoForward} className="browser-button p-2 rounded-full disabled:text-zinc-600 disabled:hover:bg-transparent">{ICONS.CHEVRON_RIGHT}</button>
+        <button onClick={onReload} className="browser-button p-2 rounded-full">{ICONS.RELOAD}</button>
         <button
           onClick={() => onNavigate(NEW_TAB_URL)}
           onMouseDown={handleHomeClick}
-          className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
+          className="browser-button p-2 rounded-full"
         >
           {ICONS.HOME}
         </button>
-        <button onClick={onToggleVerticalTabs} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors">{ICONS.VERTICAL_TABS}</button>
+        <button onClick={onToggleVerticalTabs} className="browser-button p-2 rounded-full">{ICONS.VERTICAL_TABS}</button>
 
         <div className="flex-grow flex items-center relative h-full py-1.5">
           <div
-              className={`absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 ${isInternalPage ? 'cursor-default' : 'cursor-grab'}`}
+              className={`absolute left-3 top-1/2 -translate-y-1/2 text-browser-text-muted ${isInternalPage ? 'cursor-default' : 'cursor-grab'}`}
               draggable={!isInternalPage}
               onDragStart={handleDragStart}
           >
@@ -255,13 +255,13 @@ export const AddressBar: React.FC<AddressBarProps> = ({
                 e.target.select();
               }}
               onBlur={() => setIsInputFocused(false)}
-              className="w-full h-full bg-zinc-900 rounded-full text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 pl-9 pr-4"
+              className="flex-1 h-full px-10 py-2 text-sm bg-browser-bg border border-browser-border rounded-lg text-browser-text placeholder:text-browser-text-muted focus:outline-none focus:ring-2 focus:ring-browser-primary focus:border-transparent"
               placeholder={placeholder || "Search Google or enter an address"}
             />
           </form>
         </div>
 
-        <button onClick={onToggleBookmark} disabled={isInternalPage} className="p-2 rounded-full hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors disabled:text-zinc-600 disabled:hover:bg-transparent">
+        <button onClick={onToggleBookmark} disabled={isInternalPage} className="browser-button p-2 rounded-full disabled:text-zinc-600 disabled:hover:bg-transparent">
           {isBookmarked ? ICONS.BOOKMARK_FILLED : ICONS.BOOKMARK}
         </button>
         <HamburgerMenu onNavigate={onNavigate} />

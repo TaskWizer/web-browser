@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import type { ConversationMessage } from "../types";
+import { reportError } from "../lib/sentry";
 
 // Get API key from environment variables using load balancing
 const getApiKey = (): string | undefined => {
@@ -40,6 +41,15 @@ try {
 } catch (error) {
   initializationError = `Failed to initialize Gemini API: ${error instanceof Error ? error.message : 'Unknown error'}`;
   console.error(initializationError);
+
+  // Report initialization error to Sentry
+  if (error instanceof Error) {
+    reportError(error, {
+      service: 'geminiService',
+      operation: 'initialization',
+      apiKeyLength: API_KEY?.length || 0,
+    });
+  }
 }
 
 /**
@@ -84,6 +94,16 @@ export const searchWithGemini = async (query: string): Promise<string> => {
     return response.text || 'No response generated';
   } catch (error) {
     console.error("Error calling Gemini API:", error);
+
+    // Report API error to Sentry
+    if (error instanceof Error) {
+      reportError(error, {
+        service: 'geminiService',
+        operation: 'search',
+        query: query.substring(0, 100), // Limit query length for privacy
+        modelName: getModelName(),
+      });
+    }
 
     // Provide helpful error message with fallback
     const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;

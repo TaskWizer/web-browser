@@ -29,11 +29,9 @@ function inferPrimaryProxy(): string {
     // Only use local SSRF-enforcing backend in development mode (any localhost port)
     const isDev = /localhost|127\.0\.0\.1/.test(origin);
     if (isDev) {
-      // Dynamically determine the backend port based on current port
-      // Vite dev server can run on any port (3000, 3001, 5173, etc.)
-      const currentPort = window.location.port || '3000';
-      // Backend proxy runs on same port as frontend in dev mode
-      return `http://127.0.0.1:${currentPort}/api/proxy?url=`;
+      // Backend API runs on port 3005 (updated to avoid port conflicts)
+      // This provides the secure proxy with jina.ai integration
+      return `http://127.0.0.1:3005/api/proxy?url=`;
     }
     // In production/preview, use third-party CORS proxy (Cloudflare Pages has no backend)
     return 'https://corsproxy.io/?';
@@ -227,30 +225,53 @@ export async function fetchThroughProxy(
       console.log(`[ProxyService] Attempting to fetch ${url} through proxy ${i + 1}/${proxies.length}`);
       
       const response = await fetchWithTimeout(proxiedUrl, finalConfig.timeout);
-      
+
       if (!response.ok) {
         console.warn(`[ProxyService] Proxy ${i + 1} returned status ${response.status}`);
         continue;
       }
-      
-      const html = await response.text();
-      
-      if (!html || html.trim().length === 0) {
+
+      const contentType = response.headers.get('content-type') || '';
+
+      let content: string;
+      let isJsonResponse = contentType.includes('application/json');
+
+      if (isJsonResponse) {
+        // Handle JSON response from our API server
+        const jsonResponse = await response.json();
+        if (jsonResponse.success && jsonResponse.html) {
+          content = jsonResponse.html;
+        } else {
+          throw new Error(jsonResponse.error || 'Failed to fetch content from proxy');
+        }
+      } else {
+        // Handle direct HTML response from third-party proxies
+        content = await response.text();
+      }
+
+      if (!content || content.trim().length === 0) {
         console.warn(`[ProxyService] Proxy ${i + 1} returned empty content`);
         continue;
       }
-      
-      // Sanitize and rewrite URLs
-      const sanitized = sanitizeHTML(html);
-      const rewritten = rewriteURLs(sanitized, url, proxyUrl);
-      
+
+      // Only sanitize HTML content, not markdown
+      let processedContent = content;
+      if (isJsonResponse && !content.startsWith('```markdown') && !content.includes('**')) {
+        // Content might be markdown from jina.ai, so don't HTML sanitize it
+        processedContent = content;
+      } else {
+        // Sanitize and rewrite URLs for HTML content
+        processedContent = sanitizeHTML(content);
+        processedContent = rewriteURLs(processedContent, url, proxyUrl);
+      }
+
       console.log(`[ProxyService] Successfully fetched content through proxy ${i + 1}`);
-      
+
       return {
         success: true,
-        html: rewritten,
+        html: processedContent,
         proxyUsed: proxyUrl,
-        renderMode: 'advanced',
+        renderMode: isJsonResponse ? 'advanced' : 'fallback',
       };
     } catch (error) {
       console.warn(`[ProxyService] Proxy ${i + 1} failed:`, error);
